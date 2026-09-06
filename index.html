@@ -554,36 +554,36 @@
     <button class="nav-btn" data-tab="menu" onclick="openDrawer()">☰<span data-i18n="navMenu">المزيد</span></button>
   </div>
 
-  <!-- ============ DRAWER ============ -->
-  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <button class="close-drawer" onclick="closeDrawer()">✕</button>
-    <div class="drawer-logo">
-      <svg width="30" height="30" viewBox="0 0 64 64" fill="none">
-        <circle cx="15" cy="46" r="10" stroke="#F2760B" stroke-width="4"/>
-        <circle cx="49" cy="46" r="10" stroke="#F2760B" stroke-width="4"/>
-        <path d="M15 46L27 24H39M27 24L34 46H49" stroke="#F2760B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M34 46L44 30" stroke="#F2760B" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-      <span style="font-weight:900;font-size:19px;" data-i18n="appName">جوبا داش</span>
-    </div>
-    <button class="drawer-item" onclick="go('home')">🏠 <span data-i18n="navHome">الرئيسية</span></button>
-    <button class="drawer-item" onclick="go('orders')">🧾 <span data-i18n="navOrders">طلباتي</span></button>
-    <button class="drawer-item" onclick="go('cart')">🛒 <span data-i18n="navCart">السلة</span></button>
-    <button class="drawer-item" onclick="go('driver')">🏍️ <span data-i18n="joinDriver">الانضمام كسائق</span></button>
-    <button class="drawer-item" onclick="go('merchant')">🍽️ <span data-i18n="joinMerchant">الانضمام كصاحب مطعم</span></button>
-    <button class="drawer-item" onclick="go('merchantAuth')" id="drawerMerchantDash">🏪 <span data-i18n="merchantDashLink">لوحة تحكم مطعمي</span></button>
-    <button class="drawer-item" onclick="go('driverAuth')" id="drawerDriverDash">🛵 <span data-i18n="driverDashLink">لوحة تحكم السائق</span></button>
-    <button class="drawer-item" onclick="go('about')">ℹ️ <span data-i18n="aboutTitle">من نحن</span></button>
-    <button class="drawer-item" onclick="go('privacy')">🔒 <span data-i18n="privacyTitle">سياسة الخصوصية</span></button>
-    <button class="drawer-item" onclick="toggleDarkMode()">🌙 <span data-i18n="darkModeToggle" id="darkModeLabel">الوضع الليلي</span></button>
-    <div class="lang-toggle">
-      <button id="btnAr" onclick="setLang('ar')">العربية</button>
-      <button id="btnEn" onclick="setLang('en')">English</button>
-    </div>
-  </div>
-
   <div class="toast" id="toast"></div>
+</div>
+
+<!-- ============ DRAWER (kept outside #phone so it can never be clipped) ============ -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <button class="close-drawer" onclick="closeDrawer()">✕</button>
+  <div class="drawer-logo">
+    <svg width="30" height="30" viewBox="0 0 64 64" fill="none">
+      <circle cx="15" cy="46" r="10" stroke="#F2760B" stroke-width="4"/>
+      <circle cx="49" cy="46" r="10" stroke="#F2760B" stroke-width="4"/>
+      <path d="M15 46L27 24H39M27 24L34 46H49" stroke="#F2760B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M34 46L44 30" stroke="#F2760B" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <span style="font-weight:900;font-size:19px;" data-i18n="appName">جوبا داش</span>
+  </div>
+  <button class="drawer-item" onclick="go('home')">🏠 <span data-i18n="navHome">الرئيسية</span></button>
+  <button class="drawer-item" onclick="go('orders')">🧾 <span data-i18n="navOrders">طلباتي</span></button>
+  <button class="drawer-item" onclick="go('cart')">🛒 <span data-i18n="navCart">السلة</span></button>
+  <button class="drawer-item" onclick="go('driver')">🏍️ <span data-i18n="joinDriver">الانضمام كسائق</span></button>
+  <button class="drawer-item" onclick="go('merchant')">🍽️ <span data-i18n="joinMerchant">الانضمام كصاحب مطعم</span></button>
+  <button class="drawer-item" onclick="go('merchantAuth')" id="drawerMerchantDash">🏪 <span data-i18n="merchantDashLink">لوحة تحكم مطعمي</span></button>
+  <button class="drawer-item" onclick="go('driverAuth')" id="drawerDriverDash">🛵 <span data-i18n="driverDashLink">لوحة تحكم السائق</span></button>
+  <button class="drawer-item" onclick="go('about')">ℹ️ <span data-i18n="aboutTitle">من نحن</span></button>
+  <button class="drawer-item" onclick="go('privacy')">🔒 <span data-i18n="privacyTitle">سياسة الخصوصية</span></button>
+  <button class="drawer-item" onclick="toggleDarkMode()">🌙 <span data-i18n="darkModeToggle" id="darkModeLabel">الوضع الليلي</span></button>
+  <div class="lang-toggle">
+    <button id="btnAr" onclick="setLang('ar')">العربية</button>
+    <button id="btnEn" onclick="setLang('en')">English</button>
+  </div>
 </div>
 
 <script>
