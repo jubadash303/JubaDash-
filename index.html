@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <style>
   :root{
     --orange-700:#B3480C;
@@ -381,6 +382,9 @@
         <div style="font-weight:800;margin-bottom:8px;" data-i18n="needDriverNow">تحتاج سائق الآن لتوصيل سريع؟</div>
         <button class="btn whatsapp-btn" onclick="requestNearestDriver()">🟢 <span data-i18n="requestDriver">اطلب أقرب سائق عبر واتساب</span></button>
       </div>
+      <div class="link-row">
+        <a onclick="go('driverAuth')" data-i18n="haveDriverAccount">عندي حساب سائق بالفعل - تسجيل الدخول</a>
+      </div>
     </div>
   </div>
 
@@ -399,8 +403,91 @@
         <button class="btn" onclick="window.open(MERCHANT_FORM_URL,'_blank')" data-i18n="openMerchantForm">📝 فتح نموذج التسجيل كصاحب مطعم</button>
       </div>
       <div class="link-row">
-        <a onclick="go('merchantDash')" data-i18n="demoDash">جرّب لوحة تحكم المطعم (تجريبي)</a>
+        <a onclick="go('merchantAuth')" data-i18n="goToMerchantDash">إنشاء حساب / تسجيل الدخول للوحة تحكم مطعمي</a>
       </div>
+    </div>
+  </div>
+
+  <!-- ============ MERCHANT AUTH (login / signup) ============ -->
+  <div class="screen" id="screen-merchantAuth">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="merchantAuthTitle">حساب صاحب المطعم</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content">
+      <div class="chips" style="margin-bottom:18px;">
+        <div class="chip" id="merchantTabLogin" onclick="setAuthTab('merchant','login')" data-i18n="loginTab">تسجيل الدخول</div>
+        <div class="chip" id="merchantTabSignup" onclick="setAuthTab('merchant','signup')" data-i18n="signupTab">حساب جديد</div>
+      </div>
+      <div id="merchantLoginForm">
+        <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="mLoginEmail"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="mLoginPass"></div>
+        <button class="btn" onclick="merchantLogin()" data-i18n="loginBtn">تسجيل الدخول</button>
+      </div>
+      <div id="merchantSignupForm" style="display:none;">
+        <div class="field"><label data-i18n="shopName">اسم المطعم / المتجر</label><input type="text" id="mSignupName"></div>
+        <div class="field"><label data-i18n="area">المنطقة</label><input type="text" id="mSignupArea" placeholder="Konyo Konyo, Juba"></div>
+        <div class="field"><label data-i18n="phoneLabel">رقم الهاتف</label><input type="tel" id="mSignupPhone"></div>
+        <div class="field">
+          <label data-i18n="momoProvider">مزوّد الدفع (Mobile Money)</label>
+          <select id="mSignupMomoProvider">
+            <option value="MTN MoMo">MTN MoMo</option>
+            <option value="M-Gurush">M-Gurush</option>
+            <option value="Digitel Cash">Digitel Cash</option>
+          </select>
+        </div>
+        <div class="field"><label data-i18n="momoNumber">رقم حساب الدفع</label><input type="tel" id="mSignupMomoNumber"></div>
+        <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="mSignupEmail"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="mSignupPass"></div>
+        <button class="btn" onclick="merchantSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
+      </div>
+      <div class="sub" id="authError" style="color:#C0392B;margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ============ DRIVER AUTH (login / signup) ============ -->
+  <div class="screen" id="screen-driverAuth">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="driverAuthTitle">حساب السائق</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content">
+      <div class="chips" style="margin-bottom:18px;">
+        <div class="chip" id="driverTabLogin" onclick="setAuthTab('driver','login')" data-i18n="loginTab">تسجيل الدخول</div>
+        <div class="chip" id="driverTabSignup" onclick="setAuthTab('driver','signup')" data-i18n="signupTab">حساب جديد</div>
+      </div>
+      <div id="driverLoginForm">
+        <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="dLoginEmail"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="dLoginPass"></div>
+        <button class="btn" onclick="driverLogin()" data-i18n="loginBtn">تسجيل الدخول</button>
+      </div>
+      <div id="driverSignupForm" style="display:none;">
+        <div class="field"><label data-i18n="fullName">الاسم الكامل</label><input type="text" id="dSignupName"></div>
+        <div class="field"><label data-i18n="phoneLabel">رقم الهاتف</label><input type="tel" id="dSignupPhone"></div>
+        <div class="field">
+          <label data-i18n="vehicleType">نوع المركبة</label>
+          <select id="dSignupVehicle">
+            <option data-i18n="motorcycle">دراجة نارية</option>
+            <option data-i18n="bicycle">دراجة هوائية</option>
+            <option data-i18n="car">سيارة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="momoProvider">مزوّد الدفع (Mobile Money)</label>
+          <select id="dSignupMomoProvider">
+            <option value="MTN MoMo">MTN MoMo</option>
+            <option value="M-Gurush">M-Gurush</option>
+            <option value="Digitel Cash">Digitel Cash</option>
+          </select>
+        </div>
+        <div class="field"><label data-i18n="momoNumber">رقم حساب الدفع</label><input type="tel" id="dSignupMomoNumber"></div>
+        <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="dSignupEmail"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="dSignupPass"></div>
+        <button class="btn" onclick="driverSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
+      </div>
+      <div class="sub" id="driverAuthError" style="color:#C0392B;margin-top:10px;"></div>
     </div>
   </div>
 
@@ -408,22 +495,58 @@
   <div class="screen" id="screen-merchantDash">
     <div class="topbar">
       <button class="icon-btn" onclick="go('home')">‹</button>
-      <div class="brand"><span class="name" data-i18n="dashTitle">قائمة مطعمي</span></div>
-      <div style="width:38px;"></div>
+      <div class="brand"><span class="name" data-i18n="dashTitle">لوحة تحكم مطعمي</span></div>
+      <button class="icon-btn" onclick="logoutRole()">🚪</button>
     </div>
     <div class="content">
-      <div class="sub" data-i18n="dashSub">أضف أو احذف أصناف قائمتك، وستظهر مباشرة للزبائن.</div>
-      <div class="card">
-        <div class="field"><label data-i18n="itemName">اسم الصنف</label><input type="text" id="newItemName"></div>
-        <div class="field"><label data-i18n="itemPrice">السعر (SSP)</label><input type="number" id="newItemPrice"></div>
-        <div class="field"><label data-i18n="itemEmoji">رمز الصنف (إيموجي)</label><input type="text" id="newItemEmoji" placeholder="🍛"></div>
-        <button class="btn ghost" onclick="addMenuItem()" data-i18n="addItem">+ إضافة للقائمة</button>
+      <div class="chips" style="margin-bottom:16px;">
+        <div class="chip active" id="dashTabMenu" onclick="setDashTab('menu')" data-i18n="menuTab">القائمة</div>
+        <div class="chip" id="dashTabOrders" onclick="setDashTab('orders')" data-i18n="incomingOrders">الطلبات الواردة</div>
       </div>
-      <div id="dashList"></div>
+
+      <div id="dashMenuPanel">
+        <div class="sub" data-i18n="dashSub">أضف أو احذف أصناف قائمتك، وستظهر مباشرة للزبائن.</div>
+        <div class="card">
+          <div class="field"><label data-i18n="itemName">اسم الصنف</label><input type="text" id="newItemName"></div>
+          <div class="field"><label data-i18n="itemPrice">السعر (SSP)</label><input type="number" id="newItemPrice"></div>
+          <div class="field"><label data-i18n="itemEmoji">رمز الصنف (إيموجي)</label><input type="text" id="newItemEmoji" placeholder="🍛"></div>
+          <button class="btn ghost" onclick="addMenuItem()" data-i18n="addItem">+ إضافة للقائمة</button>
+        </div>
+        <div id="dashList"></div>
+      </div>
+
+      <div id="dashOrdersPanel" style="display:none;">
+        <div id="dashOrdersList"></div>
+      </div>
+
+      <div class="card" style="margin-top:6px;">
+        <div class="sub" style="margin:0;" data-i18n="momoPayoutNote">أرباحك تُحسب من طلباتك المكتملة، ويتم تحويلها يدويًا لحساب الدفع المسجّل لديك.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DRIVER DASHBOARD ============ -->
+  <div class="screen" id="screen-driverDash">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="driverDashTitle">لوحة تحكم السائق</span></div>
+      <button class="icon-btn" onclick="logoutRole()">🚪</button>
+    </div>
+    <div class="content">
+      <div class="chips" style="margin-bottom:16px;">
+        <div class="chip active" id="driverTabAvailable" onclick="setDriverTab('available')" data-i18n="availableOrders">طلبات متاحة</div>
+        <div class="chip" id="driverTabMine" onclick="setDriverTab('mine')" data-i18n="myDeliveries">توصيلاتي</div>
+      </div>
+      <div id="driverAvailablePanel"></div>
+      <div id="driverMinePanel" style="display:none;"></div>
+      <div class="card" style="margin-top:6px;">
+        <div class="sub" style="margin:0;" data-i18n="momoPayoutNote">أرباحك تُحسب من طلباتك المكتملة، ويتم تحويلها يدويًا لحساب الدفع المسجّل لديك.</div>
+      </div>
     </div>
   </div>
 
   <!-- ============ BOTTOM NAV (home/orders/cart/profile) ============ -->
+
   <div class="bottom-nav" id="mainNav" style="display:none;">
     <button class="nav-btn active" data-tab="home" onclick="go('home')">🏠<span data-i18n="navHome">الرئيسية</span></button>
     <button class="nav-btn" data-tab="orders" onclick="go('orders')">🧾<span data-i18n="navOrders">طلباتي</span></button>
@@ -449,6 +572,8 @@
     <button class="drawer-item" onclick="go('cart')">🛒 <span data-i18n="navCart">السلة</span></button>
     <button class="drawer-item" onclick="go('driver')">🏍️ <span data-i18n="joinDriver">الانضمام كسائق</span></button>
     <button class="drawer-item" onclick="go('merchant')">🍽️ <span data-i18n="joinMerchant">الانضمام كصاحب مطعم</span></button>
+    <button class="drawer-item" onclick="go('merchantAuth')" id="drawerMerchantDash">🏪 <span data-i18n="merchantDashLink">لوحة تحكم مطعمي</span></button>
+    <button class="drawer-item" onclick="go('driverAuth')" id="drawerDriverDash">🛵 <span data-i18n="driverDashLink">لوحة تحكم السائق</span></button>
     <button class="drawer-item" onclick="go('about')">ℹ️ <span data-i18n="aboutTitle">من نحن</span></button>
     <button class="drawer-item" onclick="go('privacy')">🔒 <span data-i18n="privacyTitle">سياسة الخصوصية</span></button>
     <button class="drawer-item" onclick="toggleDarkMode()">🌙 <span data-i18n="darkModeToggle" id="darkModeLabel">الوضع الليلي</span></button>
@@ -521,6 +646,14 @@ const I18N = {
     needDriverNow:"تحتاج سائق الآن لتوصيل سريع؟", driverFormIntro:"املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا خلال 24 ساعة",
     openDriverForm:"📝 فتح نموذج التسجيل كسائق", merchantFormIntro:"املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا لإضافة مطعمك",
     openMerchantForm:"📝 فتح نموذج التسجيل كصاحب مطعم",
+    haveDriverAccount:"عندي حساب سائق بالفعل - تسجيل الدخول", goToMerchantDash:"إنشاء حساب / تسجيل الدخول للوحة تحكم مطعمي",
+    merchantDashLink:"لوحة تحكم مطعمي", driverDashLink:"لوحة تحكم السائق",
+    merchantAuthTitle:"حساب صاحب المطعم", driverAuthTitle:"حساب السائق", loginTab:"تسجيل الدخول", signupTab:"حساب جديد",
+    emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور", loginBtn:"تسجيل الدخول", createAccountBtn:"إنشاء الحساب",
+    momoProvider:"مزوّد الدفع (Mobile Money)", momoNumber:"رقم حساب الدفع",
+    menuTab:"القائمة", incomingOrders:"الطلبات الواردة", driverDashTitle:"لوحة تحكم السائق",
+    availableOrders:"طلبات متاحة", myDeliveries:"توصيلاتي",
+    momoPayoutNote:"أرباحك تُحسب من طلباتك المكتملة، ويتم تحويلها يدويًا لحساب الدفع المسجّل لديك.",
     aboutText:`<p>جوبا داش هو تطبيق توصيل طلبات محلي مصمم خصيصًا لخدمة مجتمع مدينة جوبا، جنوب السودان.</p>
     <h3>رؤيتنا</h3><p>ربط سكان جوبا بأفضل المطاعم والمتاجر المحلية بسهولة وسرعة، ودعم أصحاب الأعمال الصغيرة والسائقين في المدينة.</p>
     <h3>ماذا نقدم؟</h3><p>توصيل طعام من مطاعم جوبا المحلية، فرص عمل للسائقين، ومنصة لأصحاب المطاعم لعرض قوائمهم وإدارتها بسهولة.</p>`,
@@ -551,6 +684,14 @@ const I18N = {
     needDriverNow:"Need a driver right now for a quick delivery?", driverFormIntro:"Fill out the official application form and our team will contact you within 24 hours",
     openDriverForm:"📝 Open driver application form", merchantFormIntro:"Fill out the official application form and our team will contact you to add your restaurant",
     openMerchantForm:"📝 Open merchant application form",
+    haveDriverAccount:"I already have a driver account - Log in", goToMerchantDash:"Create account / log in to my restaurant dashboard",
+    merchantDashLink:"My Restaurant Dashboard", driverDashLink:"Driver Dashboard",
+    merchantAuthTitle:"Restaurant Owner Account", driverAuthTitle:"Driver Account", loginTab:"Log in", signupTab:"New account",
+    emailLabel:"Email", passwordLabel:"Password", loginBtn:"Log in", createAccountBtn:"Create account",
+    momoProvider:"Payment provider (Mobile Money)", momoNumber:"Payout account number",
+    menuTab:"Menu", incomingOrders:"Incoming orders", driverDashTitle:"Driver Dashboard",
+    availableOrders:"Available orders", myDeliveries:"My deliveries",
+    momoPayoutNote:"Your earnings are calculated from completed orders and paid out manually to your registered payout account.",
     aboutText:`<p>JubaDash is a local delivery app built specifically for the community of Juba, South Sudan.</p>
     <h3>Our vision</h3><p>Connecting Juba residents with the best local restaurants and shops quickly and easily, while supporting small businesses and drivers across the city.</p>
     <h3>What we offer</h3><p>Food delivery from local Juba restaurants, income opportunities for drivers, and an easy platform for restaurant owners to manage their menus.</p>`,
@@ -574,24 +715,29 @@ const firebaseConfig = {
   measurementId: "G-L3SQQVRPMW"
 };
 let db = null;
+let auth = null;
 try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
+  auth = firebase.auth();
 }catch(e){
   console.error('Firebase failed to initialize (SDK blocked or offline). App will run without cloud saving.', e);
 }
 
 async function saveOrderToFirestore(order){
-  if(!db) return;
+  if(!db) return null;
   try{
-    await db.collection('orders').add({
+    const ref = await db.collection('orders').add({
+      restaurantId: order.restaurantId || null,
       restName: order.restName,
       items: order.lines.map(l=>({ name: l.item.n[state.lang], qty: l.qty, price: l.item.p })),
       total: order.total,
       status: 'placed',
+      driverId: null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-  }catch(e){ console.error('Firestore order save failed', e); }
+    return ref.id;
+  }catch(e){ console.error('Firestore order save failed', e); return null; }
 }
 
 async function loadOrdersFromFirestore(){
@@ -611,9 +757,10 @@ async function loadOrdersFromFirestore(){
 }
 
 async function saveMenuItemToFirestore(item){
-  if(!db) return null;
+  if(!db || !state.currentUser) return null;
   try{
     const ref = await db.collection('menuItems').add({
+      restaurantId: state.currentUser.uid,
       name: item.n.ar, price: item.p, emoji: item.e, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     return ref.id;
@@ -624,11 +771,10 @@ async function deleteMenuItemFromFirestore(docId){
   try{ if(docId) await db.collection('menuItems').doc(docId).delete(); }
   catch(e){ console.error('Firestore menu delete failed', e); }
 }
-async function loadMenuFromFirestore(){
-  if(!db) return;
+async function loadMyMenu(){
+  if(!db || !state.currentUser) return;
   try{
-    const snap = await db.collection('menuItems').orderBy('createdAt','asc').get();
-    if(snap.empty) return; // keep default demo items until merchant adds their own
+    const snap = await db.collection('menuItems').where('restaurantId','==',state.currentUser.uid).get();
     state.merchantMenu = snap.docs.map(doc=>{
       const d = doc.data();
       return {n:{ar:d.name,en:d.name}, d:{ar:'',en:''}, p:d.price, e:d.emoji, _docId:doc.id};
@@ -637,15 +783,51 @@ async function loadMenuFromFirestore(){
   }catch(e){ console.error('Firestore load menu failed', e); }
 }
 
-/* =========================================================
-   STATE
-========================================================= */
+let ALL_RESTAURANTS = [...RESTAURANTS];
+const REST_COLORS = ['#B3480C','#1E7145','#0F5C8A','#C9971F','#7A3E9D','#A33B5E'];
+function pickColor(seed){
+  let hash = 0;
+  for(let i=0;i<seed.length;i++) hash = (hash*31 + seed.charCodeAt(i)) % 997;
+  return REST_COLORS[hash % REST_COLORS.length];
+}
+
+async function loadRestaurantsFromFirestore(){
+  if(!db) return;
+  try{
+    const [restSnap, menuSnap] = await Promise.all([
+      db.collection('restaurants').get(),
+      db.collection('menuItems').get(),
+    ]);
+    const menusByRestaurant = {};
+    menuSnap.docs.forEach(doc=>{
+      const d = doc.data();
+      const rid = d.restaurantId;
+      if(!rid) return; // skip legacy items with no owner
+      if(!menusByRestaurant[rid]) menusByRestaurant[rid] = [];
+      menusByRestaurant[rid].push({n:{ar:d.name,en:d.name}, d:{ar:'',en:''}, p:d.price, e:d.emoji, _docId:doc.id});
+    });
+    const dynamicRestaurants = restSnap.docs.map(doc=>{
+      const d = doc.data();
+      return {
+        id: doc.id,
+        name:{ar:d.name, en:d.name},
+        tag:{ar:d.area || 'مطعم مسجّل', en:d.area || 'Registered restaurant'},
+        color: pickColor(doc.id), time:'30-40', rating:5.0, emoji:'🍽️',
+        menu: menusByRestaurant[doc.id] || [],
+        dynamic:true, ownerId:doc.id, momoProvider:d.momoProvider, momoNumber:d.momoNumber,
+      };
+    });
+    ALL_RESTAURANTS = [...RESTAURANTS, ...dynamicRestaurants];
+    if(document.getElementById('screen-home').classList.contains('active')) renderHome();
+  }catch(e){ console.error('Failed to load live restaurants', e); }
+}
 let state = {
   lang:'ar',
   cart:[], // {rid, itemIndex, qty}
   currentRestId:null,
   orders:[],
-  merchantMenu: JSON.parse(JSON.stringify(RESTAURANTS[0].menu)),
+  merchantMenu: [],
+  currentUser:null, // {uid, role:'merchant'|'driver', profile:{...}}
 };
 
 function t(key){ return I18N[state.lang][key] || key; }
@@ -654,10 +836,14 @@ function t(key){ return I18N[state.lang][key] || key; }
    NAVIGATION
 ========================================================= */
 function go(screen){
+  // gate dashboards behind login
+  if(screen==='merchantDash' && (!state.currentUser || state.currentUser.role!=='merchant')){ screen='merchantAuth'; }
+  if(screen==='driverDash' && (!state.currentUser || state.currentUser.role!=='driver')){ screen='driverAuth'; }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const map = {home:'screen-home', restaurant:'screen-restaurant', cart:'screen-cart', tracking:'screen-tracking',
     about:'screen-about', privacy:'screen-privacy', orders:'screen-orders', driver:'screen-driver',
-    merchant:'screen-merchant', merchantDash:'screen-merchantDash', login:'screen-login'};
+    merchant:'screen-merchant', merchantDash:'screen-merchantDash', login:'screen-login',
+    merchantAuth:'screen-merchantAuth', driverAuth:'screen-driverAuth', driverDash:'screen-driverDash'};
   document.getElementById(map[screen]).classList.add('active');
   document.getElementById('mainNav').style.display = (screen==='login') ? 'none' : 'flex';
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===screen));
@@ -669,6 +855,9 @@ function go(screen){
   if(screen==='orders'){ renderOrders(); loadOrdersFromFirestore().then(renderOrders); }
   if(screen==='tracking') renderTracking();
   if(screen==='merchantDash') renderDash();
+  if(screen==='driverDash') renderDriverDash();
+  if(screen==='merchantAuth'){ document.getElementById('authError').textContent=''; setAuthTab('merchant','login'); }
+  if(screen==='driverAuth'){ document.getElementById('driverAuthError').textContent=''; setAuthTab('driver','login'); }
   window.scrollTo(0,0);
 }
 
@@ -697,11 +886,11 @@ let activeFilter = null;
 
 function renderHome(){
   const chips = document.getElementById('chips');
-  const tags = [...new Set(RESTAURANTS.map(r=>r.tag[state.lang]))];
+  const tags = [...new Set(ALL_RESTAURANTS.map(r=>r.tag[state.lang]))];
   chips.innerHTML = `<div class="chip ${activeFilter===null?'active':''}" onclick="setFilter(null)">${t('all')}</div>` +
     tags.map(tag=>`<div class="chip ${activeFilter===tag?'active':''}" onclick="setFilter('${tag.replace(/'/g,"\\'")}')">${tag}</div>`).join('');
 
-  const list = activeFilter ? RESTAURANTS.filter(r=>r.tag[state.lang]===activeFilter) : RESTAURANTS;
+  const list = activeFilter ? ALL_RESTAURANTS.filter(r=>r.tag[state.lang]===activeFilter) : ALL_RESTAURANTS;
   document.getElementById('restList').innerHTML = list.map(r=>`
     <div class="rest-card" onclick="openRestaurant('${r.id}')">
       <div class="rest-cover" style="background:${r.color}">
@@ -719,7 +908,7 @@ function setFilter(tag){ activeFilter = tag; renderHome(); }
 
 function openRestaurant(rid){
   state.currentRestId = rid;
-  const r = RESTAURANTS.find(x=>x.id===rid);
+  const r = ALL_RESTAURANTS.find(x=>x.id===rid);
   document.getElementById('restHeaderBg').style.background = `linear-gradient(180deg, transparent, ${r.color})`;
   document.getElementById('restTitle').textContent = r.name[state.lang];
   document.getElementById('restMeta').textContent = `⭐ ${r.rating}  •  ⏱ ${r.time} ${state.lang==='ar'?'دقيقة':'min'}  •  ${r.tag[state.lang]}`;
@@ -775,7 +964,7 @@ function updateCartBadge(){
 ========================================================= */
 function cartLines(){
   return state.cart.map(c=>{
-    const r = RESTAURANTS.find(x=>x.id===c.rid);
+    const r = ALL_RESTAURANTS.find(x=>x.id===c.rid);
     const item = r.menu[c.itemIndex];
     return {r, item, qty:c.qty, lineTotal:item.p*c.qty};
   });
@@ -827,7 +1016,7 @@ function orderViaWhatsapp(){
   msg += state.lang==='ar' ? `\nالإجمالي: ${total.toLocaleString()} ${CURRENCY}` : `\nTotal: ${total.toLocaleString()} ${CURRENCY}`;
 
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-  const order = {restName, lines, total, time:new Date(), status:1};
+  const order = {restaurantId: lines[0].r.id, restName, lines, total, time:new Date(), status:1};
   state.orders.unshift(order);
   saveOrderToFirestore(order);
   state.cart = [];
@@ -889,9 +1078,124 @@ function requestNearestDriver(){
 }
 
 /* =========================================================
+   AUTH: MERCHANT & DRIVER
+========================================================= */
+function setAuthTab(role, tab){
+  const loginForm = document.getElementById(role==='merchant' ? 'merchantLoginForm' : 'driverLoginForm');
+  const signupForm = document.getElementById(role==='merchant' ? 'merchantSignupForm' : 'driverSignupForm');
+  const tabLogin = document.getElementById(role==='merchant' ? 'merchantTabLogin' : 'driverTabLogin');
+  const tabSignup = document.getElementById(role==='merchant' ? 'merchantTabSignup' : 'driverTabSignup');
+  loginForm.style.display = tab==='login' ? 'block' : 'none';
+  signupForm.style.display = tab==='signup' ? 'block' : 'none';
+  tabLogin.classList.toggle('active', tab==='login');
+  tabSignup.classList.toggle('active', tab==='signup');
+}
+
+function authErrorMessage(e){
+  if(state.lang==='ar') return 'حدث خطأ: تأكد من البريد وكلمة المرور (6 أحرف على الأقل)';
+  return 'Error: check your email and password (6+ characters)';
+}
+
+async function merchantSignup(){
+  if(!auth || !db){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const name = document.getElementById('mSignupName').value.trim();
+  const area = document.getElementById('mSignupArea').value.trim();
+  const phone = document.getElementById('mSignupPhone').value.trim();
+  const momoProvider = document.getElementById('mSignupMomoProvider').value;
+  const momoNumber = document.getElementById('mSignupMomoNumber').value.trim();
+  const email = document.getElementById('mSignupEmail').value.trim();
+  const pass = document.getElementById('mSignupPass').value;
+  if(!name || !email || !pass){ document.getElementById('authError').textContent = state.lang==='ar'?'الرجاء تعبئة الاسم والبريد وكلمة المرور':'Please fill in name, email and password'; return; }
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('restaurants').doc(cred.user.uid).set({
+      name, area, phone, momoProvider, momoNumber, ownerId: cred.user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('authError').textContent = '';
+    showToast(state.lang==='ar' ? 'تم إنشاء حساب مطعمك بنجاح' : 'Restaurant account created successfully');
+  }catch(e){ document.getElementById('authError').textContent = authErrorMessage(e); }
+}
+async function merchantLogin(){
+  if(!auth){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const email = document.getElementById('mLoginEmail').value.trim();
+  const pass = document.getElementById('mLoginPass').value;
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+    document.getElementById('authError').textContent = '';
+  }catch(e){ document.getElementById('authError').textContent = authErrorMessage(e); }
+}
+
+async function driverSignup(){
+  if(!auth || !db){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const name = document.getElementById('dSignupName').value.trim();
+  const phone = document.getElementById('dSignupPhone').value.trim();
+  const vehicle = document.getElementById('dSignupVehicle').value;
+  const momoProvider = document.getElementById('dSignupMomoProvider').value;
+  const momoNumber = document.getElementById('dSignupMomoNumber').value.trim();
+  const email = document.getElementById('dSignupEmail').value.trim();
+  const pass = document.getElementById('dSignupPass').value;
+  if(!name || !email || !pass){ document.getElementById('driverAuthError').textContent = state.lang==='ar'?'الرجاء تعبئة الاسم والبريد وكلمة المرور':'Please fill in name, email and password'; return; }
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('drivers').doc(cred.user.uid).set({
+      name, phone, vehicle, momoProvider, momoNumber, ownerId: cred.user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('driverAuthError').textContent = '';
+    showToast(state.lang==='ar' ? 'تم إنشاء حساب السائق بنجاح' : 'Driver account created successfully');
+  }catch(e){ document.getElementById('driverAuthError').textContent = authErrorMessage(e); }
+}
+async function driverLogin(){
+  if(!auth){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const email = document.getElementById('dLoginEmail').value.trim();
+  const pass = document.getElementById('dLoginPass').value;
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+    document.getElementById('driverAuthError').textContent = '';
+  }catch(e){ document.getElementById('driverAuthError').textContent = authErrorMessage(e); }
+}
+
+function logoutRole(){
+  if(auth) auth.signOut();
+  go('home');
+}
+
+function initAuthListener(){
+  if(!auth || !db) return;
+  auth.onAuthStateChanged(async (user)=>{
+    if(!user){ state.currentUser = null; return; }
+    // check which role this uid belongs to
+    try{
+      const restDoc = await db.collection('restaurants').doc(user.uid).get();
+      if(restDoc.exists){
+        state.currentUser = {uid:user.uid, role:'merchant', profile:restDoc.data()};
+        loadMyMenu();
+        if(document.getElementById('screen-merchantAuth').classList.contains('active')) go('merchantDash');
+        return;
+      }
+      const driverDoc = await db.collection('drivers').doc(user.uid).get();
+      if(driverDoc.exists){
+        state.currentUser = {uid:user.uid, role:'driver', profile:driverDoc.data()};
+        if(document.getElementById('screen-driverAuth').classList.contains('active')) go('driverDash');
+        return;
+      }
+    }catch(e){ console.error('Auth role lookup failed', e); }
+  });
+}
+
+/* =========================================================
    MERCHANT DASHBOARD
 ========================================================= */
+function setDashTab(tab){
+  document.getElementById('dashTabMenu').classList.toggle('active', tab==='menu');
+  document.getElementById('dashTabOrders').classList.toggle('active', tab==='orders');
+  document.getElementById('dashMenuPanel').style.display = tab==='menu' ? 'block' : 'none';
+  document.getElementById('dashOrdersPanel').style.display = tab==='orders' ? 'block' : 'none';
+  if(tab==='orders') loadMyRestaurantOrders();
+}
 function renderDash(){
+  if(!state.currentUser) return;
   document.getElementById('dashList').innerHTML = state.merchantMenu.map((item,idx)=>`
     <div class="dash-item">
       <div class="di-thumb" style="background:#F2760B22;">${item.e}</div>
@@ -903,6 +1207,7 @@ function renderDash(){
     </div>`).join('');
 }
 async function addMenuItem(){
+  if(!state.currentUser){ return; }
   const name = document.getElementById('newItemName').value.trim();
   const price = parseInt(document.getElementById('newItemPrice').value);
   const emoji = document.getElementById('newItemEmoji').value.trim() || '🍽️';
@@ -916,6 +1221,7 @@ async function addMenuItem(){
   renderDash();
   const docId = await saveMenuItemToFirestore(newItem);
   newItem._docId = docId;
+  loadRestaurantsFromFirestore();
 }
 async function removeMenuItem(idx){
   const removed = state.merchantMenu[idx];
@@ -923,6 +1229,84 @@ async function removeMenuItem(idx){
   showToast(t('toastItemRemoved'));
   renderDash();
   if(removed && removed._docId) await deleteMenuItemFromFirestore(removed._docId);
+  loadRestaurantsFromFirestore();
+}
+
+const ORDER_STATUS_LABEL = {
+  ar:{placed:'طلب جديد', preparing:'يتم التحضير', ready:'جاهز للتوصيل', accepted:'السائق في الطريق', delivered:'تم التوصيل'},
+  en:{placed:'New order', preparing:'Preparing', ready:'Ready for pickup', accepted:'Driver on the way', delivered:'Delivered'},
+};
+async function loadMyRestaurantOrders(){
+  if(!db || !state.currentUser) return;
+  try{
+    const snap = await db.collection('orders').where('restaurantId','==',state.currentUser.uid).orderBy('createdAt','desc').limit(30).get();
+    const orders = snap.docs.map(doc=>({id:doc.id, ...doc.data()}));
+    document.getElementById('dashOrdersList').innerHTML = orders.length ? orders.map(o=>`
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;font-weight:800;margin-bottom:6px;">
+          <span>${(o.items||[]).map(i=>i.name+' ×'+i.qty).join('، ')}</span>
+        </div>
+        <div class="sub" style="margin-bottom:8px;">${(o.total||0).toLocaleString()} ${CURRENCY} • ${ORDER_STATUS_LABEL[state.lang][o.status]||o.status}</div>
+        ${o.status==='placed' ? `<button class="btn ghost btn-sm" onclick="updateOrderStatus('${o.id}','preparing')">${state.lang==='ar'?'بدء التحضير':'Start preparing'}</button>` : ''}
+        ${o.status==='preparing' ? `<button class="btn ghost btn-sm" onclick="updateOrderStatus('${o.id}','ready')">${state.lang==='ar'?'جاهز الآن':'Mark ready'}</button>` : ''}
+      </div>`).join('') : `<div class="empty-state"><div class="sub">${state.lang==='ar'?'لا يوجد طلبات واردة بعد':'No incoming orders yet'}</div></div>`;
+  }catch(e){ console.error('load restaurant orders failed', e); }
+}
+async function updateOrderStatus(orderId, status){
+  if(!db) return;
+  try{ await db.collection('orders').doc(orderId).update({status}); loadMyRestaurantOrders(); }
+  catch(e){ console.error('update order status failed', e); }
+}
+
+/* =========================================================
+   DRIVER DASHBOARD
+========================================================= */
+function setDriverTab(tab){
+  document.getElementById('driverTabAvailable').classList.toggle('active', tab==='available');
+  document.getElementById('driverTabMine').classList.toggle('active', tab==='mine');
+  document.getElementById('driverAvailablePanel').style.display = tab==='available' ? 'block' : 'none';
+  document.getElementById('driverMinePanel').style.display = tab==='mine' ? 'block' : 'none';
+  if(tab==='mine') loadMyDeliveries(); else loadAvailableOrders();
+}
+function renderDriverDash(){ setDriverTab('available'); }
+async function loadAvailableOrders(){
+  if(!db) return;
+  try{
+    const snap = await db.collection('orders').where('status','==','ready').orderBy('createdAt','asc').limit(30).get();
+    let orders = snap.docs.map(doc=>({id:doc.id, ...doc.data()})).filter(o=>!o.driverId);
+    document.getElementById('driverAvailablePanel').innerHTML = orders.length ? orders.map(o=>`
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">${o.restName}</div>
+        <div class="sub" style="margin-bottom:8px;">${(o.items||[]).map(i=>i.name+' ×'+i.qty).join('، ')} — ${(o.total||0).toLocaleString()} ${CURRENCY}</div>
+        <button class="btn whatsapp-btn btn-sm" onclick="acceptOrder('${o.id}')">${state.lang==='ar'?'قبول التوصيل':'Accept delivery'}</button>
+      </div>`).join('') : `<div class="empty-state"><div class="sub">${state.lang==='ar'?'لا يوجد طلبات جاهزة للتوصيل الآن':'No orders ready for delivery right now'}</div></div>`;
+  }catch(e){ console.error('load available orders failed', e); }
+}
+async function loadMyDeliveries(){
+  if(!db || !state.currentUser) return;
+  try{
+    const snap = await db.collection('orders').where('driverId','==',state.currentUser.uid).orderBy('createdAt','desc').limit(30).get();
+    const orders = snap.docs.map(doc=>({id:doc.id, ...doc.data()}));
+    document.getElementById('driverMinePanel').innerHTML = orders.length ? orders.map(o=>`
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:6px;">${o.restName}</div>
+        <div class="sub" style="margin-bottom:8px;">${(o.total||0).toLocaleString()} ${CURRENCY} • ${ORDER_STATUS_LABEL[state.lang][o.status]||o.status}</div>
+        ${o.status!=='delivered' ? `<button class="btn btn-sm" onclick="markDelivered('${o.id}')">${state.lang==='ar'?'تم التسليم':'Mark delivered'}</button>` : ''}
+      </div>`).join('') : `<div class="empty-state"><div class="sub">${state.lang==='ar'?'لا يوجد توصيلات حاليًا':'No deliveries yet'}</div></div>`;
+  }catch(e){ console.error('load my deliveries failed', e); }
+}
+async function acceptOrder(orderId){
+  if(!db || !state.currentUser) return;
+  try{
+    await db.collection('orders').doc(orderId).update({driverId: state.currentUser.uid, status:'accepted'});
+    showToast(state.lang==='ar'?'تم قبول الطلب':'Order accepted');
+    loadAvailableOrders();
+  }catch(e){ console.error('accept order failed', e); }
+}
+async function markDelivered(orderId){
+  if(!db) return;
+  try{ await db.collection('orders').doc(orderId).update({status:'delivered'}); loadMyDeliveries(); }
+  catch(e){ console.error('mark delivered failed', e); }
 }
 
 /* =========================================================
@@ -962,8 +1346,9 @@ function initDarkMode(){
 
 /* init */
 updateCartBadge();
-loadMenuFromFirestore();
+loadRestaurantsFromFirestore();
 initDarkMode();
+initAuthListener();
 </script>
 </body>
 </html>
