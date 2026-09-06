@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JubaDash — جوبا داش</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --orange-700:#B3480C;
+    --orange-600:#D9640A;
+    --orange-500:#F2760B;
+    --orange-400:#FF9040;
+    --orange-100:#FFE9D4;
+    --orange-50:#FFF6EC;
+    --ink:#241C14;
+    --charcoal:#2E2519;
+    --cream:#FBF6EF;
+    --paper:#FFFFFF;
+    --line:#EBE0D2;
+    --green:#1E7145;
+    --gold:#C9971F;
+    --muted:#8A7A66;
+    --radius:18px;
+  }
+  html.dark body{background:#0E0B08;}
+  html.dark #phone{background:#1A140D;}
+  html.dark{
+    --ink:#F3ECE1; --cream:#1A140D; --paper:#241C13; --line:#3A2E20; --muted:#B8A88F; --charcoal:#120D08;
+  }
+  html.dark .search{background:#241C13;color:#B8A88F;}
+  html.dark .chip{background:#241C13;color:#F3ECE1;}
+  html.dark .field input, html.dark .field select, html.dark .field textarea{background:#241C13;color:#F3ECE1;}
+  html.dark .btn.outline{background:#241C13;}
+  html.dark .btn.ghost{background:#2E2013;color:var(--orange-400);}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#DED2C0;font-family:'Tajawal',sans-serif;color:var(--ink);}
+  html[lang="en"] body{font-family:'Inter',sans-serif;}
+  html[lang="en"] .display{font-family:'Space Grotesk',sans-serif;}
+  html[lang="ar"] .display{font-family:'Tajawal',sans-serif;}
+
+  #phone{
+    max-width:430px;margin:0 auto;min-height:100vh;background:var(--cream);
+    position:relative;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.25);
+    display:flex;flex-direction:column;
+  }
+  .screen{display:none;flex-direction:column;flex:1;min-height:100vh;}
+  .screen.active{display:flex;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    background:var(--charcoal);color:#fff;padding:16px 18px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .name{font-weight:900;font-size:20px;letter-spacing:.2px;}
+  .brand .name span{color:var(--orange-400);}
+  .icon-btn{
+    background:rgba(255,255,255,.08);border:none;color:#fff;width:38px;height:38px;
+    border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    position:relative;flex-shrink:0;
+  }
+  .icon-btn:active{background:rgba(255,255,255,.18);}
+  .badge{
+    position:absolute;top:-4px;inset-inline-end:-4px;background:var(--orange-500);
+    color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;padding:0 4px;
+  }
+
+  /* ---------- Sidebar drawer ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(20,14,8,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40;}
+  .overlay.show{opacity:1;pointer-events:auto;}
+  .drawer{
+    position:fixed;top:0;bottom:0;inset-inline-start:0;width:82%;max-width:340px;background:var(--charcoal);
+    color:#fff;z-index:50;transform:translateX(-105%);transition:transform .3s ease;
+    display:flex;flex-direction:column;padding:26px 20px;
+  }
+  html[dir="rtl"] .drawer{transform:translateX(105%);}
+  .drawer.show{transform:translateX(0);}
+  .drawer .close-drawer{align-self:flex-end;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;}
+  .drawer-logo{display:flex;align-items:center;gap:10px;margin:6px 0 22px;}
+  .drawer-item{
+    background:none;border:none;color:#EFE6D8;text-align:start;padding:13px 6px;font-size:15.5px;
+    display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.08);
+    font-family:inherit;
+  }
+  .drawer-item:active{color:var(--orange-400);}
+  .lang-toggle{
+    margin-top:auto;display:flex;background:rgba(255,255,255,.08);border-radius:14px;padding:4px;
+  }
+  .lang-toggle button{
+    flex:1;padding:9px 0;border:none;background:none;color:#EFE6D8;border-radius:10px;cursor:pointer;font-weight:700;font-family:inherit;
+  }
+  .lang-toggle button.active{background:var(--orange-500);color:#fff;}
+
+  /* ---------- Generic content ---------- */
+  .content{padding:18px;flex:1;overflow-y:auto;padding-bottom:90px;}
+  .h1{font-size:23px;font-weight:900;margin:4px 0 4px;}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:16px;line-height:1.5;}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+
+  /* ---------- Login ---------- */
+  .login-hero{
+    background:linear-gradient(160deg,var(--orange-500),var(--orange-700));
+    padding:52px 26px 40px;color:#fff;border-radius:0 0 32px 32px;text-align:center;
+  }
+  .bike-wrap{width:96px;height:96px;margin:0 auto 14px;background:rgba(255,255,255,.16);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .login-hero h1{font-size:30px;margin:0 0 2px;font-weight:900;}
+  .login-hero p{margin:0;opacity:.92;font-size:14.5px;}
+  .login-form{padding:26px 22px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--charcoal);}
+  .field input, .field select, .field textarea{
+    width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);font-size:15px;
+    font-family:inherit;background:#fff;color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--orange-500);}
+  .btn{
+    width:100%;padding:14px;border-radius:14px;border:none;background:var(--orange-500);color:#fff;
+    font-weight:800;font-size:15.5px;cursor:pointer;font-family:inherit;
+  }
+  .btn:active{background:var(--orange-600);}
+  .btn.outline{background:#fff;color:var(--orange-600);border:1.6px solid var(--orange-500);}
+  .btn.ghost{background:var(--orange-50);color:var(--orange-700);}
+  .btn.dark{background:var(--charcoal);}
+  .btn-sm{width:auto;padding:9px 16px;font-size:13.5px;border-radius:10px;}
+  .link-row{text-align:center;margin-top:14px;font-size:13.5px;color:var(--muted);}
+  .link-row a{color:var(--orange-600);font-weight:700;text-decoration:none;cursor:pointer;}
+
+  /* ---------- Home ---------- */
+  .search{
+    background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;
+    display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--muted);font-size:14.5px;
+  }
+  .chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px;padding-bottom:2px;}
+  .chip{flex-shrink:0;padding:8px 15px;background:#fff;border:1.5px solid var(--line);border-radius:20px;font-size:13.5px;font-weight:700;white-space:nowrap;}
+  .chip.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal);}
+  .rest-card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;cursor:pointer;
+  }
+  .rest-cover{height:110px;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;position:relative;}
+  .rest-cover .time-badge{
+    position:absolute;bottom:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11.5px;
+    padding:4px 9px;border-radius:8px;font-weight:700;
+  }
+  .rest-info{padding:13px 14px;}
+  .rest-info .name{font-weight:800;font-size:16px;margin-bottom:3px;}
+  .rest-info .meta{font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;}
+  .rest-info .rating{color:var(--gold);font-weight:800;}
+
+  /* ---------- Restaurant / menu ---------- */
+  .rest-header{height:150px;display:flex;align-items:flex-end;padding:16px;color:#fff;position:relative;}
+  .rest-header .back{position:absolute;top:14px;inset-inline-start:14px;background:rgba(0,0,0,.4);}
+  .rest-header .rtitle{font-size:22px;font-weight:900;}
+  .menu-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .menu-thumb{width:64px;height:64px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .menu-item .mi-name{font-weight:800;font-size:15px;margin-bottom:3px;}
+  .menu-item .mi-desc{font-size:12.5px;color:var(--muted);line-height:1.4;margin-bottom:6px;}
+  .menu-item .mi-price{font-weight:800;color:var(--orange-600);font-size:14px;}
+  .qty-add{
+    background:var(--orange-500);color:#fff;border:none;width:30px;height:30px;border-radius:9px;
+    font-size:18px;font-weight:800;cursor:pointer;flex-shrink:0;align-self:center;
+  }
+  .qty-row{display:flex;align-items:center;gap:8px;align-self:center;flex-shrink:0;}
+  .qty-row button{width:28px;height:28px;border-radius:8px;border:1.5px solid var(--orange-500);background:#fff;color:var(--orange-600);font-weight:800;cursor:pointer;}
+  .qty-row span{font-weight:800;min-width:14px;text-align:center;}
+
+  /* ---------- Cart ---------- */
+  .cart-line{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
+  .cart-line .cl-name{font-weight:700;}
+  .cart-total-row{display:flex;justify-content:space-between;padding:9px 0;font-size:14px;color:var(--muted);}
+  .cart-total-row.final{font-size:17px;font-weight:900;color:var(--ink);border-top:1.5px dashed var(--line);margin-top:6px;padding-top:12px;}
+  .whatsapp-btn{background:#25D366;}
+  .whatsapp-btn:active{background:#1FB855;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state .emoji{font-size:52px;margin-bottom:10px;}
+
+  /* ---------- Tracking ---------- */
+  .track-map{
+    height:190px;border-radius:16px;overflow:hidden;margin-bottom:18px;border:1px solid var(--line);position:relative;
+  }
+  .track-map iframe{width:100%;height:100%;border:0;}
+  .track-map .pin{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);font-size:30px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3));
+  }
+  .steps{position:relative;padding-inline-start:26px;}
+  .step{position:relative;padding-bottom:26px;}
+  .step:last-child{padding-bottom:0;}
+  .step::before{
+    content:'';position:absolute;inset-inline-start:-26px;top:2px;width:16px;height:16px;border-radius:50%;
+    background:var(--line);border:3px solid var(--paper);
+  }
+  .step::after{
+    content:'';position:absolute;inset-inline-start:-19px;top:18px;width:2px;height:calc(100% - 6px);background:var(--line);
+  }
+  .step:last-child::after{display:none;}
+  .step.done::before{background:var(--orange-500);}
+  .step.done::after{background:var(--orange-500);}
+  .step .st-title{font-weight:800;font-size:14.5px;}
+  .step .st-time{font-size:12px;color:var(--muted);}
+  .step.done .st-title{color:var(--orange-600);}
+
+  /* ---------- Merchant dashboard ---------- */
+  .dash-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px;margin-bottom:10px;}
+  .dash-item .di-thumb{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .dash-item .di-info{flex:1;}
+  .dash-item .di-name{font-weight:800;font-size:14px;}
+  .dash-item .di-price{font-size:12.5px;color:var(--muted);}
+  .del-btn{background:#FDEDED;color:#C0392B;border:none;width:30px;height:30px;border-radius:9px;font-weight:800;cursor:pointer;flex-shrink:0;}
+
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav{
+    position:fixed;bottom:0;max-width:430px;width:100%;background:#fff;border-top:1px solid var(--line);
+    display:flex;padding:8px 6px 10px;z-index:20;
+  }
+  #phone.hasnav .bottom-nav{position:absolute;}
+  .nav-btn{
+    flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;padding:4px 0;
+  }
+  .nav-btn.active{color:var(--orange-600);}
+  .nav-btn svg{width:22px;height:22px;}
+
+  .toast{
+    position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--charcoal);
+    color:#fff;padding:11px 20px;border-radius:30px;font-size:13.5px;font-weight:700;opacity:0;
+    transition:all .3s;z-index:100;pointer-events:none;white-space:nowrap;max-width:90%;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .info-block{font-size:14px;line-height:1.9;color:#4A4033;}
+  .info-block h3{font-size:15px;margin:16px 0 6px;color:var(--ink);}
+
+  ::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+
+<div id="phone">
+
+  <!-- ============ LOGIN ============ -->
+  <div class="screen active" id="screen-login">
+    <div class="login-hero">
+      <div class="bike-wrap">
+        <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
+          <circle cx="15" cy="46" r="10" stroke="#fff" stroke-width="3.5"/>
+          <circle cx="49" cy="46" r="10" stroke="#fff" stroke-width="3.5"/>
+          <path d="M15 46L27 24H39M27 24L34 46H49M27 24L22 30M39 24L46 30" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M34 46L44 30" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M8 18L18 15L21 20" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="display" data-i18n="appName">جوبا داش</h1>
+      <p data-i18n="tagline">أكلك المفضل من جوبا لبيتك</p>
+    </div>
+    <div class="login-form">
+      <div class="field">
+        <label data-i18n="phoneLabel">رقم الهاتف</label>
+        <input type="tel" placeholder="092 XXX XXXX" id="loginPhone">
+      </div>
+      <button class="btn" onclick="doLogin()" data-i18n="continueBtn">متابعة</button>
+      <div class="link-row">
+        <span data-i18n="orText">أو</span>
+        <a onclick="go('home')" data-i18n="guestLink"> الدخول كزائر</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div class="screen" id="screen-home">
+    <div class="topbar">
+      <button class="icon-btn" onclick="openDrawer()">☰</button>
+      <div class="brand"><span class="name" data-i18n="appName">جوبا داش</span></div>
+      <button class="icon-btn" onclick="go('cart')">
+        🛒<span class="badge" id="cartBadge">0</span>
+      </button>
+    </div>
+    <div class="content">
+      <div class="h1" data-i18n="homeGreeting">وين نطلب اليوم؟</div>
+      <div class="sub" data-i18n="homeSub">توصيل سريع من أفضل مطاعم جوبا</div>
+      <div class="search">🔍 <span data-i18n="searchPlaceholder">دور على مطعم أو وجبة</span></div>
+      <button class="btn whatsapp-btn" style="margin-bottom:16px;" onclick="requestNearestDriver()">🏍️ <span data-i18n="requestDriver">اطلب أقرب سائق عبر واتساب</span></button>
+      <div class="chips" id="chips"></div>
+      <div id="restList"></div>
+    </div>
+  </div>
+
+  <!-- ============ RESTAURANT ============ -->
+  <div class="screen" id="screen-restaurant">
+    <div class="rest-header" id="restHeaderBg">
+      <button class="icon-btn back" onclick="go('home')">‹</button>
+      <div class="rtitle" id="restTitle"></div>
+    </div>
+    <div class="content">
+      <div class="sub" id="restMeta" style="margin-bottom:14px;"></div>
+      <div id="menuList"></div>
+    </div>
+    <div class="bottom-nav" id="restBar" style="display:none;">
+      <button class="btn" style="margin:6px 14px;" onclick="go('cart')" id="viewCartBtn"></button>
+    </div>
+  </div>
+
+  <!-- ============ CART ============ -->
+  <div class="screen" id="screen-cart">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="cartTitle">سلتي</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content" id="cartContent"></div>
+  </div>
+
+  <!-- ============ TRACKING ============ -->
+  <div class="screen" id="screen-tracking">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="trackTitle">تتبع الطلب</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content">
+      <div class="track-map">
+        <iframe loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=31.545%2C4.82%2C31.62%2C4.88&layer=mapnik&marker=4.85%2C31.58"></iframe>
+        <div class="pin">🏍️</div>
+      </div>
+      <div class="card">
+        <div class="steps" id="trackSteps"></div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="sub" style="margin-bottom:10px;" data-i18n="driverAssigned">السائق: أكوان دينق — دراجة نارية 🏍️</div>
+        <button class="btn outline btn-sm" onclick="requestNearestDriver()">📞 <span data-i18n="callDriver">اتصال بالسائق</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SIMPLE INFO SCREENS ============ -->
+  <div class="screen" id="screen-about">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="aboutTitle">من نحن</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content"><div class="info-block" id="aboutBody"></div></div>
+  </div>
+
+  <div class="screen" id="screen-privacy">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="privacyTitle">سياسة الخصوصية</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content"><div class="info-block" id="privacyBody"></div></div>
+  </div>
+
+  <div class="screen" id="screen-orders">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="ordersTitle">طلباتي</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content" id="ordersContent"></div>
+  </div>
+
+  <!-- ============ DRIVER SIGNUP ============ -->
+  <div class="screen" id="screen-driver">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="driverTitle">انضم كسائق</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content">
+      <div class="sub" data-i18n="driverSub">وصّل مع جوبا داش واربح دخل إضافي بوقتك الحر.</div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:40px;margin-bottom:8px;">🏍️</div>
+        <div style="font-weight:800;margin-bottom:12px;" data-i18n="driverFormIntro">املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا خلال 24 ساعة</div>
+        <button class="btn" onclick="window.open(DRIVER_FORM_URL,'_blank')" data-i18n="openDriverForm">📝 فتح نموذج التسجيل كسائق</button>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-weight:800;margin-bottom:8px;" data-i18n="needDriverNow">تحتاج سائق الآن لتوصيل سريع؟</div>
+        <button class="btn whatsapp-btn" onclick="requestNearestDriver()">🟢 <span data-i18n="requestDriver">اطلب أقرب سائق عبر واتساب</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MERCHANT SIGNUP ============ -->
+  <div class="screen" id="screen-merchant">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="merchantTitle">انضم كصاحب مطعم/متجر</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content">
+      <div class="sub" data-i18n="merchantSub">اعرض مطعمك أو متجرك لآلاف الزبائن في جوبا.</div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:40px;margin-bottom:8px;">🍽️</div>
+        <div style="font-weight:800;margin-bottom:12px;" data-i18n="merchantFormIntro">املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا لإضافة مطعمك</div>
+        <button class="btn" onclick="window.open(MERCHANT_FORM_URL,'_blank')" data-i18n="openMerchantForm">📝 فتح نموذج التسجيل كصاحب مطعم</button>
+      </div>
+      <div class="link-row">
+        <a onclick="go('merchantDash')" data-i18n="demoDash">جرّب لوحة تحكم المطعم (تجريبي)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MERCHANT DASHBOARD ============ -->
+  <div class="screen" id="screen-merchantDash">
+    <div class="topbar">
+      <button class="icon-btn" onclick="go('home')">‹</button>
+      <div class="brand"><span class="name" data-i18n="dashTitle">قائمة مطعمي</span></div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="content">
+      <div class="sub" data-i18n="dashSub">أضف أو احذف أصناف قائمتك، وستظهر مباشرة للزبائن.</div>
+      <div class="card">
+        <div class="field"><label data-i18n="itemName">اسم الصنف</label><input type="text" id="newItemName"></div>
+        <div class="field"><label data-i18n="itemPrice">السعر (SSP)</label><input type="number" id="newItemPrice"></div>
+        <div class="field"><label data-i18n="itemEmoji">رمز الصنف (إيموجي)</label><input type="text" id="newItemEmoji" placeholder="🍛"></div>
+        <button class="btn ghost" onclick="addMenuItem()" data-i18n="addItem">+ إضافة للقائمة</button>
+      </div>
+      <div id="dashList"></div>
+    </div>
+  </div>
+
+  <!-- ============ BOTTOM NAV (home/orders/cart/profile) ============ -->
+  <div class="bottom-nav" id="mainNav" style="display:none;">
+    <button class="nav-btn active" data-tab="home" onclick="go('home')">🏠<span data-i18n="navHome">الرئيسية</span></button>
+    <button class="nav-btn" data-tab="orders" onclick="go('orders')">🧾<span data-i18n="navOrders">طلباتي</span></button>
+    <button class="nav-btn" data-tab="cart" onclick="go('cart')">🛒<span data-i18n="navCart">السلة</span></button>
+    <button class="nav-btn" data-tab="menu" onclick="openDrawer()">☰<span data-i18n="navMenu">المزيد</span></button>
+  </div>
+
+  <!-- ============ DRAWER ============ -->
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <button class="close-drawer" onclick="closeDrawer()">✕</button>
+    <div class="drawer-logo">
+      <svg width="30" height="30" viewBox="0 0 64 64" fill="none">
+        <circle cx="15" cy="46" r="10" stroke="#F2760B" stroke-width="4"/>
+        <circle cx="49" cy="46" r="10" stroke="#F2760B" stroke-width="4"/>
+        <path d="M15 46L27 24H39M27 24L34 46H49" stroke="#F2760B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M34 46L44 30" stroke="#F2760B" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <span style="font-weight:900;font-size:19px;" data-i18n="appName">جوبا داش</span>
+    </div>
+    <button class="drawer-item" onclick="go('home')">🏠 <span data-i18n="navHome">الرئيسية</span></button>
+    <button class="drawer-item" onclick="go('orders')">🧾 <span data-i18n="navOrders">طلباتي</span></button>
+    <button class="drawer-item" onclick="go('cart')">🛒 <span data-i18n="navCart">السلة</span></button>
+    <button class="drawer-item" onclick="go('driver')">🏍️ <span data-i18n="joinDriver">الانضمام كسائق</span></button>
+    <button class="drawer-item" onclick="go('merchant')">🍽️ <span data-i18n="joinMerchant">الانضمام كصاحب مطعم</span></button>
+    <button class="drawer-item" onclick="go('about')">ℹ️ <span data-i18n="aboutTitle">من نحن</span></button>
+    <button class="drawer-item" onclick="go('privacy')">🔒 <span data-i18n="privacyTitle">سياسة الخصوصية</span></button>
+    <button class="drawer-item" onclick="toggleDarkMode()">🌙 <span data-i18n="darkModeToggle" id="darkModeLabel">الوضع الليلي</span></button>
+    <div class="lang-toggle">
+      <button id="btnAr" onclick="setLang('ar')">العربية</button>
+      <button id="btnEn" onclick="setLang('en')">English</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+========================================================= */
+const CURRENCY = "SSP";
+const WHATSAPP_NUMBER = "211924057751"; // رقم استلام طلبات الأكل
+const DRIVER_WHATSAPP_NUMBER = "211924447330"; // رقم طلب أقرب سائق / التواصل المباشر
+const DRIVER_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdjpyUpTI0BckEm_YEDVLLiQJvVev7GEJRi6TDQzUBPwPXSiA/viewform?usp=dialog";
+const MERCHANT_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfyw2gL2jOTJvqxhHj4Lp1RRTcEja_IbtAuAiBIKp23zoaMxA/viewform?usp=dialog";
+
+const RESTAURANTS = [
+  {id:'r1', name:{ar:'مطبخ نياكورون', en:'Nyakuron Kitchen'}, tag:{ar:'سوداني تقليدي', en:'Traditional Sudanese'}, color:'#B3480C', time:'25-35', rating:4.7, emoji:'🍲',
+    menu:[
+      {n:{ar:'عصيدة بالملاح',en:'Asida with Mullah'}, d:{ar:'عصيدة ذرة مع ملاح لحم بالطماطم والبامية',en:'Sorghum asida with tomato & okra beef stew'}, p:3500, e:'🍛'},
+      {n:{ar:'كسرة بالويكة',en:'Kisra with Weka'}, d:{ar:'خبز كسرة رقيق مع ويكة الملوخية',en:'Thin sorghum flatbread with jute leaf stew'}, p:3000, e:'🫓'},
+      {n:{ar:'فول مدمس',en:'Ful Medames'}, d:{ar:'فول سوداني مطبوخ بالزيت والطماطم والبيض',en:'Slow-cooked fava beans with oil, tomato & egg'}, p:2200, e:'🥘'},
+    ]},
+  {id:'r2', name:{ar:'كونيو كونيو بايتس', en:'Konyo Konyo Bites'}, tag:{ar:'شارع جوبا', en:'Juba street food'}, color:'#1E7145', time:'15-25', rating:4.5, emoji:'🍢',
+    menu:[
+      {n:{ar:'كباب مشوي',en:'Grilled Kebab'}, d:{ar:'كباب لحم بقري متبل مشوي على الفحم',en:'Charcoal-grilled seasoned beef skewers'}, p:4000, e:'🍢'},
+      {n:{ar:'سمبوسة لحم',en:'Meat Sambosa'}, d:{ar:'سمبوسة مقرمشة محشوة لحم مفروم متبل (5 قطع)',en:'Crispy pastry filled with spiced minced meat (5 pcs)'}, p:1800, e:'🥟'},
+      {n:{ar:'شاي بالحليب',en:'Chai bil Haleeb'}, d:{ar:'شاي سوداني بالحليب والهيل',en:'Sudanese spiced milk tea with cardamom'}, p:800, e:'☕'},
+    ]},
+  {id:'r3', name:{ar:'جوبا جنكشن دايينر', en:'Juba Junction Diner'}, tag:{ar:'أسماك النيل', en:'Nile fish specialties'}, color:'#0F5C8A', time:'30-40', rating:4.6, emoji:'🐟',
+    menu:[
+      {n:{ar:'قراص نيلي مشوي',en:'Grilled Nile Perch'}, d:{ar:'سمك قراص طازج من النيل مشوي مع صلصة الليمون',en:'Fresh Nile perch grilled with lemon sauce'}, p:6500, e:'🐟'},
+      {n:{ar:'كجيك (سمك مجفف)',en:'Kajaik Fish Stew'}, d:{ar:'يخنة سمك مجفف تقليدية مع البصل والطماطم',en:'Traditional dried-fish stew with onion & tomato'}, p:4200, e:'🍲'},
+      {n:{ar:'أرز بالخضار',en:'Vegetable Rice'}, d:{ar:'أرز أبيض مع خضار موسمية',en:'White rice with seasonal vegetables'}, p:2000, e:'🍚'},
+    ]},
+  {id:'r4', name:{ar:'ماركت جريل', en:'Custom Market Grill'}, tag:{ar:'مشاوي وفطور', en:'Grills & breakfast'}, color:'#C9971F', time:'20-30', rating:4.4, emoji:'🍗',
+    menu:[
+      {n:{ar:'فطة باللحم',en:'Fatta with Meat'}, d:{ar:'خبز مقطع مع مرق اللحم والزبادي',en:'Torn bread soaked in meat broth with yogurt'}, p:3800, e:'🍞'},
+      {n:{ar:'دجاج مشوي كامل',en:'Whole Grilled Chicken'}, d:{ar:'دجاج مشوي متبل يقدم مع الأرز',en:'Marinated grilled chicken served with rice'}, p:7000, e:'🍗'},
+      {n:{ar:'مندازي (كعك مقلي)',en:'Mandazi (Fried Buns)'}, d:{ar:'كعك محلى مقلي شرق أفريقي، 4 قطع',en:'East African sweet fried dough, 4 pcs'}, p:1200, e:'🍩'},
+    ]},
+];
+
+const I18N = {
+  ar:{
+    appName:"جوبا داش", tagline:"أكلك المفضل من جوبا لبيتك", phoneLabel:"رقم الهاتف", continueBtn:"متابعة",
+    orText:"أو", guestLink:"الدخول كزائر", homeGreeting:"وين نطلب اليوم؟", homeSub:"توصيل سريع من أفضل مطاعم جوبا",
+    searchPlaceholder:"دور على مطعم أو وجبة", cartTitle:"سلتي", trackTitle:"تتبع الطلب", driverAssigned:"السائق: أكوان دينق — دراجة نارية 🏍️",
+    callDriver:"اتصال بالسائق", aboutTitle:"من نحن", privacyTitle:"سياسة الخصوصية", ordersTitle:"طلباتي",
+    driverTitle:"انضم كسائق", driverSub:"وصّل مع جوبا داش واربح دخل إضافي بوقتك الحر.", fullName:"الاسم الكامل",
+    vehicleType:"نوع المركبة", motorcycle:"دراجة نارية", bicycle:"دراجة هوائية", car:"سيارة", area:"المنطقة",
+    submitApp:"إرسال الطلب", merchantTitle:"انضم كصاحب مطعم/متجر", merchantSub:"اعرض مطعمك أو متجرك لآلاف الزبائن في جوبا.",
+    shopName:"اسم المطعم / المتجر", ownerName:"اسم صاحب المتجر", demoDash:"جرّب لوحة تحكم المطعم (تجريبي)",
+    dashTitle:"قائمة مطعمي", dashSub:"أضف أو احذف أصناف قائمتك، وستظهر مباشرة للزبائن.", itemName:"اسم الصنف",
+    itemPrice:"السعر (SSP)", itemEmoji:"رمز الصنف (إيموجي)", addItem:"+ إضافة للقائمة", navHome:"الرئيسية",
+    navOrders:"طلباتي", navCart:"السلة", navMenu:"المزيد", joinDriver:"الانضمام كسائق", joinMerchant:"الانضمام كصاحب مطعم",
+    all:"الكل", addToCart:"أضف", viewCart:"عرض السلة", emptyCart:"سلتك فارغة", emptyCartSub:"أضف أصناف لذيذة من مطاعم جوبا لتبدأ",
+    browseFood:"تصفح المطاعم", subtotal:"المجموع الفرعي", delivery:"رسوم التوصيل", total:"الإجمالي",
+    orderWhatsapp:"إرسال الطلب عبر واتساب", trackNow:"تتبع طلبي", stepPlaced:"تم استلام الطلب", stepPrep:"يتم التحضير الآن",
+    stepWay:"السائق في الطريق", stepDelivered:"تم التوصيل", noOrders:"لا يوجد طلبات سابقة بعد", toastAdded:"تمت الإضافة للسلة",
+    toastSubmitted:"تم إرسال طلبك بنجاح! سنتواصل معك قريبًا", toastLoggedIn:"تم تسجيل الدخول بنجاح", toastItemAdded:"تمت إضافة الصنف للقائمة",
+    toastItemRemoved:"تم حذف الصنف", currencyLabel:"جنيه جنوب سوداني",
+    darkModeToggle:"الوضع الليلي", lightModeToggle:"الوضع النهاري", requestDriver:"اطلب أقرب سائق عبر واتساب",
+    needDriverNow:"تحتاج سائق الآن لتوصيل سريع؟", driverFormIntro:"املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا خلال 24 ساعة",
+    openDriverForm:"📝 فتح نموذج التسجيل كسائق", merchantFormIntro:"املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا لإضافة مطعمك",
+    openMerchantForm:"📝 فتح نموذج التسجيل كصاحب مطعم",
+    aboutText:`<p>جوبا داش هو تطبيق توصيل طلبات محلي مصمم خصيصًا لخدمة مجتمع مدينة جوبا، جنوب السودان.</p>
+    <h3>رؤيتنا</h3><p>ربط سكان جوبا بأفضل المطاعم والمتاجر المحلية بسهولة وسرعة، ودعم أصحاب الأعمال الصغيرة والسائقين في المدينة.</p>
+    <h3>ماذا نقدم؟</h3><p>توصيل طعام من مطاعم جوبا المحلية، فرص عمل للسائقين، ومنصة لأصحاب المطاعم لعرض قوائمهم وإدارتها بسهولة.</p>`,
+    privacyText:`<h3>جمع البيانات</h3><p>نجمع رقم هاتفك وموقعك التقريبي فقط لغرض تنفيذ وتوصيل طلباتك بدقة.</p>
+    <h3>استخدام البيانات</h3><p>لا نشارك بياناتك مع أي طرف ثالث لأغراض تسويقية. تُستخدم بياناتك فقط لتوصيل طلبك والتواصل معك بخصوصه.</p>
+    <h3>الأمان</h3><p>يتم تخزين بياناتك بشكل آمن، ويمكنك طلب حذف حسابك وبياناتك في أي وقت.</p>
+    <h3>تواصل معنا</h3><p>لأي استفسار بخصوص خصوصيتك، راسلنا عبر واتساب أو من صفحة "من نحن".</p>`,
+  },
+  en:{
+    appName:"JubaDash", tagline:"Your favorite Juba food, delivered", phoneLabel:"Phone number", continueBtn:"Continue",
+    orText:"or", guestLink:"Continue as guest", homeGreeting:"What are we ordering today?", homeSub:"Fast delivery from Juba's best spots",
+    searchPlaceholder:"Search restaurant or dish", cartTitle:"My Cart", trackTitle:"Track Order", driverAssigned:"Driver: Akuot Deng — Motorcycle 🏍️",
+    callDriver:"Call driver", aboutTitle:"About Us", privacyTitle:"Privacy Policy", ordersTitle:"My Orders",
+    driverTitle:"Join as a Driver", driverSub:"Deliver with JubaDash and earn extra income on your own time.", fullName:"Full name",
+    vehicleType:"Vehicle type", motorcycle:"Motorcycle", bicycle:"Bicycle", car:"Car", area:"Area",
+    submitApp:"Submit application", merchantTitle:"Join as a Restaurant/Shop Owner", merchantSub:"Get your restaurant or shop in front of thousands of customers in Juba.",
+    shopName:"Restaurant / shop name", ownerName:"Owner's name", demoDash:"Try the restaurant dashboard (demo)",
+    dashTitle:"My Menu", dashSub:"Add or remove menu items — they'll appear for customers instantly.", itemName:"Item name",
+    itemPrice:"Price (SSP)", itemEmoji:"Item icon (emoji)", addItem:"+ Add to menu", navHome:"Home",
+    navOrders:"Orders", navCart:"Cart", navMenu:"More", joinDriver:"Join as Driver", joinMerchant:"Join as Merchant",
+    all:"All", addToCart:"Add", viewCart:"View Cart", emptyCart:"Your cart is empty", emptyCartSub:"Add tasty items from Juba restaurants to get started",
+    browseFood:"Browse restaurants", subtotal:"Subtotal", delivery:"Delivery fee", total:"Total",
+    orderWhatsapp:"Send order via WhatsApp", trackNow:"Track my order", stepPlaced:"Order received", stepPrep:"Being prepared now",
+    stepWay:"Driver is on the way", stepDelivered:"Delivered", noOrders:"No past orders yet", toastAdded:"Added to cart",
+    toastSubmitted:"Application submitted! We'll contact you soon", toastLoggedIn:"Logged in successfully", toastItemAdded:"Item added to menu",
+    toastItemRemoved:"Item removed", currencyLabel:"South Sudanese Pound",
+    darkModeToggle:"Dark mode", lightModeToggle:"Light mode", requestDriver:"Request nearest driver via WhatsApp",
+    needDriverNow:"Need a driver right now for a quick delivery?", driverFormIntro:"Fill out the official application form and our team will contact you within 24 hours",
+    openDriverForm:"📝 Open driver application form", merchantFormIntro:"Fill out the official application form and our team will contact you to add your restaurant",
+    openMerchantForm:"📝 Open merchant application form",
+    aboutText:`<p>JubaDash is a local delivery app built specifically for the community of Juba, South Sudan.</p>
+    <h3>Our vision</h3><p>Connecting Juba residents with the best local restaurants and shops quickly and easily, while supporting small businesses and drivers across the city.</p>
+    <h3>What we offer</h3><p>Food delivery from local Juba restaurants, income opportunities for drivers, and an easy platform for restaurant owners to manage their menus.</p>`,
+    privacyText:`<h3>Data we collect</h3><p>We only collect your phone number and approximate location to accurately fulfill and deliver your orders.</p>
+    <h3>How we use it</h3><p>We never sell or share your data with third parties for marketing. It's used only to deliver your order and contact you about it.</p>
+    <h3>Security</h3><p>Your data is stored securely, and you can request deletion of your account and data at any time.</p>
+    <h3>Contact us</h3><p>For any privacy questions, message us on WhatsApp or via the "About Us" page.</p>`,
+  }
+};
+
+/* =========================================================
+   FIREBASE
+========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyB2P5eyh4QO-jZwEe77c2CXR6e8ZB87QyI",
+  authDomain: "jubadash-sawa-303.firebaseapp.com",
+  projectId: "jubadash-sawa-303",
+  storageBucket: "jubadash-sawa-303.firebasestorage.app",
+  messagingSenderId: "958003288303",
+  appId: "1:958003288303:web:f87910b9458ffbf6d3e31a",
+  measurementId: "G-L3SQQVRPMW"
+};
+let db = null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}catch(e){
+  console.error('Firebase failed to initialize (SDK blocked or offline). App will run without cloud saving.', e);
+}
+
+async function saveOrderToFirestore(order){
+  if(!db) return;
+  try{
+    await db.collection('orders').add({
+      restName: order.restName,
+      items: order.lines.map(l=>({ name: l.item.n[state.lang], qty: l.qty, price: l.item.p })),
+      total: order.total,
+      status: 'placed',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }catch(e){ console.error('Firestore order save failed', e); }
+}
+
+async function loadOrdersFromFirestore(){
+  if(!db) return;
+  try{
+    const snap = await db.collection('orders').orderBy('createdAt','desc').limit(20).get();
+    state.orders = snap.docs.map(doc=>{
+      const d = doc.data();
+      return {
+        restName: d.restName,
+        lines: (d.items||[]).map(it=>({item:{n:{ar:it.name,en:it.name},e:'🍽️',p:it.price}, qty:it.qty, lineTotal:it.price*it.qty})),
+        total: d.total,
+        time: d.createdAt ? d.createdAt.toDate() : new Date(),
+      };
+    });
+  }catch(e){ console.error('Firestore load orders failed', e); }
+}
+
+async function saveMenuItemToFirestore(item){
+  if(!db) return null;
+  try{
+    const ref = await db.collection('menuItems').add({
+      name: item.n.ar, price: item.p, emoji: item.e, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    return ref.id;
+  }catch(e){ console.error('Firestore menu save failed', e); return null; }
+}
+async function deleteMenuItemFromFirestore(docId){
+  if(!db) return;
+  try{ if(docId) await db.collection('menuItems').doc(docId).delete(); }
+  catch(e){ console.error('Firestore menu delete failed', e); }
+}
+async function loadMenuFromFirestore(){
+  if(!db) return;
+  try{
+    const snap = await db.collection('menuItems').orderBy('createdAt','asc').get();
+    if(snap.empty) return; // keep default demo items until merchant adds their own
+    state.merchantMenu = snap.docs.map(doc=>{
+      const d = doc.data();
+      return {n:{ar:d.name,en:d.name}, d:{ar:'',en:''}, p:d.price, e:d.emoji, _docId:doc.id};
+    });
+    if(document.getElementById('screen-merchantDash').classList.contains('active')) renderDash();
+  }catch(e){ console.error('Firestore load menu failed', e); }
+}
+
+/* =========================================================
+   STATE
+========================================================= */
+let state = {
+  lang:'ar',
+  cart:[], // {rid, itemIndex, qty}
+  currentRestId:null,
+  orders:[],
+  merchantMenu: JSON.parse(JSON.stringify(RESTAURANTS[0].menu)),
+};
+
+function t(key){ return I18N[state.lang][key] || key; }
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+function go(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const map = {home:'screen-home', restaurant:'screen-restaurant', cart:'screen-cart', tracking:'screen-tracking',
+    about:'screen-about', privacy:'screen-privacy', orders:'screen-orders', driver:'screen-driver',
+    merchant:'screen-merchant', merchantDash:'screen-merchantDash', login:'screen-login'};
+  document.getElementById(map[screen]).classList.add('active');
+  document.getElementById('mainNav').style.display = (screen==='login') ? 'none' : 'flex';
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===screen));
+  closeDrawer();
+  if(screen==='home') renderHome();
+  if(screen==='cart') renderCart();
+  if(screen==='about') document.getElementById('aboutBody').innerHTML = t('aboutText');
+  if(screen==='privacy') document.getElementById('privacyBody').innerHTML = t('privacyText');
+  if(screen==='orders'){ renderOrders(); loadOrdersFromFirestore().then(renderOrders); }
+  if(screen==='tracking') renderTracking();
+  if(screen==='merchantDash') renderDash();
+  window.scrollTo(0,0);
+}
+
+function openDrawer(){ document.getElementById('drawer').classList.add('show'); document.getElementById('overlay').classList.add('show'); }
+function closeDrawer(){ document.getElementById('drawer').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
+
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+function doLogin(){
+  showToast(t('toastLoggedIn'));
+  go('home');
+}
+
+/* =========================================================
+   HOME / RESTAURANTS
+========================================================= */
+let activeFilter = null;
+
+function renderHome(){
+  const chips = document.getElementById('chips');
+  const tags = [...new Set(RESTAURANTS.map(r=>r.tag[state.lang]))];
+  chips.innerHTML = `<div class="chip ${activeFilter===null?'active':''}" onclick="setFilter(null)">${t('all')}</div>` +
+    tags.map(tag=>`<div class="chip ${activeFilter===tag?'active':''}" onclick="setFilter('${tag.replace(/'/g,"\\'")}')">${tag}</div>`).join('');
+
+  const list = activeFilter ? RESTAURANTS.filter(r=>r.tag[state.lang]===activeFilter) : RESTAURANTS;
+  document.getElementById('restList').innerHTML = list.map(r=>`
+    <div class="rest-card" onclick="openRestaurant('${r.id}')">
+      <div class="rest-cover" style="background:${r.color}">
+        ${r.emoji}
+        <div class="time-badge">${r.time} ${state.lang==='ar'?'د':'min'}</div>
+      </div>
+      <div class="rest-info">
+        <div class="name">${r.name[state.lang]}</div>
+        <div class="meta"><span class="rating">★ ${r.rating}</span><span>•</span><span>${r.tag[state.lang]}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+function setFilter(tag){ activeFilter = tag; renderHome(); }
+
+function openRestaurant(rid){
+  state.currentRestId = rid;
+  const r = RESTAURANTS.find(x=>x.id===rid);
+  document.getElementById('restHeaderBg').style.background = `linear-gradient(180deg, transparent, ${r.color})`;
+  document.getElementById('restTitle').textContent = r.name[state.lang];
+  document.getElementById('restMeta').textContent = `⭐ ${r.rating}  •  ⏱ ${r.time} ${state.lang==='ar'?'دقيقة':'min'}  •  ${r.tag[state.lang]}`;
+
+  document.getElementById('menuList').innerHTML = r.menu.map((item,idx)=>{
+    const qty = getQty(rid, idx);
+    return `
+    <div class="menu-item">
+      <div style="flex:1;">
+        <div class="mi-name">${item.n[state.lang]}</div>
+        <div class="mi-desc">${item.d[state.lang]}</div>
+        <div class="mi-price">${item.p.toLocaleString()} ${CURRENCY}</div>
+      </div>
+      <div class="menu-thumb" style="background:${r.color}22;">${item.e}</div>
+      ${qty>0
+        ? `<div class="qty-row"><button onclick="changeQty('${rid}',${idx},-1)">–</button><span>${qty}</span><button onclick="changeQty('${rid}',${idx},1)">+</button></div>`
+        : `<button class="qty-add" onclick="changeQty('${rid}',${idx},1)">+</button>`}
+    </div>`;
+  }).join('');
+  go('restaurant');
+  updateRestBar();
+}
+
+function getQty(rid, idx){
+  const line = state.cart.find(c=>c.rid===rid && c.itemIndex===idx);
+  return line ? line.qty : 0;
+}
+function changeQty(rid, idx, delta){
+  let line = state.cart.find(c=>c.rid===rid && c.itemIndex===idx);
+  if(!line){ line = {rid, itemIndex:idx, qty:0}; state.cart.push(line); }
+  line.qty += delta;
+  if(line.qty <= 0) state.cart = state.cart.filter(c=>c!==line);
+  updateCartBadge();
+  openRestaurant(rid);
+  if(delta>0) showToast(t('toastAdded'));
+}
+function updateRestBar(){
+  const count = state.cart.filter(c=>c.rid===state.currentRestId).reduce((a,c)=>a+c.qty,0);
+  const bar = document.getElementById('restBar');
+  if(count>0){
+    bar.style.display='block';
+    document.getElementById('viewCartBtn').textContent = `${t('viewCart')} (${count})`;
+  } else { bar.style.display='none'; }
+}
+function updateCartBadge(){
+  const count = state.cart.reduce((a,c)=>a+c.qty,0);
+  document.getElementById('cartBadge').textContent = count;
+  updateRestBar();
+}
+
+/* =========================================================
+   CART
+========================================================= */
+function cartLines(){
+  return state.cart.map(c=>{
+    const r = RESTAURANTS.find(x=>x.id===c.rid);
+    const item = r.menu[c.itemIndex];
+    return {r, item, qty:c.qty, lineTotal:item.p*c.qty};
+  });
+}
+function renderCart(){
+  const lines = cartLines();
+  const el = document.getElementById('cartContent');
+  if(lines.length===0){
+    el.innerHTML = `<div class="empty-state"><div class="emoji">🛒</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:6px;">${t('emptyCart')}</div>
+      <div class="sub">${t('emptyCartSub')}</div>
+      <button class="btn" style="max-width:220px;margin:14px auto 0;" onclick="go('home')">${t('browseFood')}</button>
+      </div>`;
+    return;
+  }
+  const subtotal = lines.reduce((a,l)=>a+l.lineTotal,0);
+  const deliveryFee = 1500;
+  const total = subtotal + deliveryFee;
+  const restName = lines[0].r.name[state.lang];
+
+  el.innerHTML = `
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:8px;">${restName}</div>
+      ${lines.map(l=>`
+        <div class="cart-line">
+          <span class="cl-name">${l.item.e} ${l.item.n[state.lang]} × ${l.qty}</span>
+          <span>${l.lineTotal.toLocaleString()} ${CURRENCY}</span>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="cart-total-row"><span>${t('subtotal')}</span><span>${subtotal.toLocaleString()} ${CURRENCY}</span></div>
+      <div class="cart-total-row"><span>${t('delivery')}</span><span>${deliveryFee.toLocaleString()} ${CURRENCY}</span></div>
+      <div class="cart-total-row final"><span>${t('total')}</span><span>${total.toLocaleString()} ${CURRENCY}</span></div>
+    </div>
+    <button class="btn whatsapp-btn" onclick="orderViaWhatsapp()">🟢 ${t('orderWhatsapp')}</button>
+  `;
+}
+
+function orderViaWhatsapp(){
+  const lines = cartLines();
+  if(lines.length===0) return;
+  const subtotal = lines.reduce((a,l)=>a+l.lineTotal,0);
+  const total = subtotal + 1500;
+  const restName = lines[0].r.name[state.lang];
+  let msg = state.lang==='ar'
+    ? `طلب جديد من جوبا داش 🏍️\nالمطعم: ${restName}\n\n`
+    : `New order from JubaDash 🏍️\nRestaurant: ${restName}\n\n`;
+  lines.forEach(l=>{ msg += `- ${l.item.n[state.lang]} ×${l.qty} = ${l.lineTotal.toLocaleString()} ${CURRENCY}\n`; });
+  msg += state.lang==='ar' ? `\nالإجمالي: ${total.toLocaleString()} ${CURRENCY}` : `\nTotal: ${total.toLocaleString()} ${CURRENCY}`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  const order = {restName, lines, total, time:new Date(), status:1};
+  state.orders.unshift(order);
+  saveOrderToFirestore(order);
+  state.cart = [];
+  updateCartBadge();
+  window.open(url, '_blank');
+  showToast(t('toastSubmitted'));
+  go('tracking');
+}
+
+/* =========================================================
+   ORDERS
+========================================================= */
+function renderOrders(){
+  const el = document.getElementById('ordersContent');
+  if(state.orders.length===0){
+    el.innerHTML = `<div class="empty-state"><div class="emoji">🧾</div><div class="sub">${t('noOrders')}</div></div>`;
+    return;
+  }
+  el.innerHTML = state.orders.map((o,i)=>`
+    <div class="card" onclick="go('tracking')" style="cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;font-weight:800;margin-bottom:6px;">
+        <span>${o.restName}</span><span>${o.total.toLocaleString()} ${CURRENCY}</span>
+      </div>
+      <div class="sub" style="margin:0;">${o.lines.length} ${state.lang==='ar'?'صنف':'items'} • ${o.time.toLocaleTimeString()}</div>
+    </div>`).join('');
+}
+
+/* =========================================================
+   TRACKING
+========================================================= */
+function renderTracking(){
+  const steps = [
+    {key:'stepPlaced', time:'—'},
+    {key:'stepPrep', time:'—'},
+    {key:'stepWay', time:'—'},
+    {key:'stepDelivered', time:'—'},
+  ];
+  document.getElementById('trackSteps').innerHTML = steps.map((s,i)=>`
+    <div class="step ${i<2?'done':''}">
+      <div class="st-title">${t(s.key)}</div>
+      <div class="st-time">${i<2 ? (state.lang==='ar'?'تم':'Done') : (state.lang==='ar'?'قريبًا':'Upcoming')}</div>
+    </div>`).join('');
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+function submitForm(type){
+  showToast(t('toastSubmitted'));
+  go('home');
+}
+
+function requestNearestDriver(){
+  const msg = state.lang==='ar'
+    ? "مرحبًا، أحتاج أقرب سائق جوبا داش متاح الآن 🏍️ للتوصيل السريع."
+    : "Hi, I need the nearest available JubaDash driver now 🏍️ for a quick delivery.";
+  const url = `https://wa.me/${DRIVER_WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+/* =========================================================
+   MERCHANT DASHBOARD
+========================================================= */
+function renderDash(){
+  document.getElementById('dashList').innerHTML = state.merchantMenu.map((item,idx)=>`
+    <div class="dash-item">
+      <div class="di-thumb" style="background:#F2760B22;">${item.e}</div>
+      <div class="di-info">
+        <div class="di-name">${item.n[state.lang]}</div>
+        <div class="di-price">${item.p.toLocaleString()} ${CURRENCY}</div>
+      </div>
+      <button class="del-btn" onclick="removeMenuItem(${idx})">✕</button>
+    </div>`).join('');
+}
+async function addMenuItem(){
+  const name = document.getElementById('newItemName').value.trim();
+  const price = parseInt(document.getElementById('newItemPrice').value);
+  const emoji = document.getElementById('newItemEmoji').value.trim() || '🍽️';
+  if(!name || !price){ showToast(state.lang==='ar' ? 'الرجاء إدخال الاسم والسعر' : 'Please enter name and price'); return; }
+  const newItem = {n:{ar:name,en:name}, d:{ar:'',en:''}, p:price, e:emoji};
+  state.merchantMenu.push(newItem);
+  document.getElementById('newItemName').value='';
+  document.getElementById('newItemPrice').value='';
+  document.getElementById('newItemEmoji').value='';
+  showToast(t('toastItemAdded'));
+  renderDash();
+  const docId = await saveMenuItemToFirestore(newItem);
+  newItem._docId = docId;
+}
+async function removeMenuItem(idx){
+  const removed = state.merchantMenu[idx];
+  state.merchantMenu.splice(idx,1);
+  showToast(t('toastItemRemoved'));
+  renderDash();
+  if(removed && removed._docId) await deleteMenuItemFromFirestore(removed._docId);
+}
+
+/* =========================================================
+   LANGUAGE
+========================================================= */
+function setLang(lang){
+  state.lang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
+  document.getElementById('btnAr').classList.toggle('active', lang==='ar');
+  document.getElementById('btnEn').classList.toggle('active', lang==='en');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+  const isDark = document.documentElement.classList.contains('dark');
+  document.getElementById('darkModeLabel').textContent = isDark ? t('lightModeToggle') : t('darkModeToggle');
+  // re-render whatever screen relies on dynamic text
+  const active = document.querySelector('.screen.active').id;
+  const screenName = active.replace('screen-','');
+  go(screenName === 'login' ? 'login' : screenName);
+}
+
+function toggleDarkMode(){
+  const isDark = document.documentElement.classList.toggle('dark');
+  try{ localStorage.setItem('jubadash-dark', isDark ? '1' : '0'); }catch(e){}
+  document.getElementById('darkModeLabel').textContent = isDark ? t('lightModeToggle') : t('darkModeToggle');
+}
+function initDarkMode(){
+  let saved = '0';
+  try{ saved = localStorage.getItem('jubadash-dark') || '0'; }catch(e){}
+  if(saved==='1'){
+    document.documentElement.classList.add('dark');
+    document.getElementById('darkModeLabel').textContent = t('lightModeToggle');
+  }
+}
+
+/* init */
+updateCartBadge();
+loadMenuFromFirestore();
+initDarkMode();
+</script>
+</body>
+</html>
