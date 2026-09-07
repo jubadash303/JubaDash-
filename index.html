@@ -80,7 +80,7 @@
     display:flex;flex-direction:column;padding:26px 20px;
   }
   html[dir="rtl"] .drawer{transform:translateX(105%);}
-  .drawer.show{transform:translateX(0);}
+  .drawer.show, html[dir="rtl"] .drawer.show{transform:translateX(0);}
   .drawer .close-drawer{align-self:flex-end;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;}
   .drawer-logo{display:flex;align-items:center;gap:10px;margin:6px 0 22px;}
   .drawer-item{
