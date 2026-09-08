@@ -364,9 +364,13 @@
       <div class="card">
         <div class="steps" id="trackSteps"></div>
       </div>
-      <div class="card" style="text-align:center;">
-        <div class="sub" style="margin-bottom:10px;" data-i18n="driverAssigned">السائق: أكوان دينق — دراجة نارية 🏍️</div>
-        <button class="btn outline btn-sm" onclick="requestNearestDriver()">📞 <span data-i18n="callDriver">اتصال بالسائق</span></button>
+      <div class="card" style="text-align:center;" id="trackDeliveryCodeCard">
+        <div class="sub" style="margin-bottom:4px;" data-i18n="deliveryCodeLabel">رمز التسليم — أعطه للسائق عند الاستلام</div>
+        <div style="font-size:28px;font-weight:900;letter-spacing:4px;color:var(--orange-600);" id="trackDeliveryCode">----</div>
+      </div>
+      <div class="card" style="text-align:center;" id="trackDriverCard">
+        <div class="sub" style="margin-bottom:10px;" id="trackDriverInfo" data-i18n="driverNotAssigned">لسه ما تم تعيين سائق — بنبلغك فور القبول</div>
+        <button class="btn outline btn-sm" id="trackCallDriverBtn" style="display:none;" onclick="callAssignedDriver()">📞 <span data-i18n="callDriver">اتصال بالسائق</span></button>
       </div>
     </div>
   </div>
@@ -465,6 +469,10 @@
         <div class="field"><label data-i18n="area">المنطقة</label><input type="text" id="mSignupArea" placeholder="Konyo Konyo, Juba"></div>
         <div class="field"><label data-i18n="phoneLabel">رقم الهاتف</label><input type="tel" id="mSignupPhone"></div>
         <div class="field">
+          <label data-i18n="orderWhatsappLabel">رقم واتساب استلام الطلبات</label>
+          <input type="tel" id="mSignupOrderWhatsapp" placeholder="092xxxxxxx">
+        </div>
+        <div class="field">
           <label data-i18n="momoProvider">مزوّد الدفع (Mobile Money)</label>
           <select id="mSignupMomoProvider">
             <option value="MTN MoMo">MTN MoMo</option>
@@ -547,6 +555,7 @@
       <div class="chips" style="margin-bottom:16px;">
         <div class="chip active" id="dashTabMenu" onclick="setDashTab('menu')" data-i18n="menuTab">القائمة</div>
         <div class="chip" id="dashTabOrders" onclick="setDashTab('orders')" data-i18n="incomingOrders">الطلبات الواردة</div>
+        <div class="chip" id="dashTabSettings" onclick="setDashTab('settings')" data-i18n="settingsTab">الإعدادات</div>
       </div>
 
       <div id="dashMenuPanel">
@@ -556,13 +565,30 @@
           <div class="field"><label data-i18n="itemPrice">السعر (SSP)</label><input type="number" id="newItemPrice"></div>
           <div class="field"><label data-i18n="itemEmoji">رمز الصنف (إيموجي)</label><input type="text" id="newItemEmoji" placeholder="🍛"></div>
           <div class="field"><label data-i18n="itemImageUrl">رابط صورة الصنف (اختياري)</label><input type="url" id="newItemImageUrl" placeholder="https://..."></div>
-          <button class="btn ghost" onclick="addMenuItem()" data-i18n="addItem">+ إضافة للقائمة</button>
+          <button class="btn ghost" id="addItemBtn" onclick="addMenuItem()" data-i18n="addItem">+ إضافة للقائمة</button>
         </div>
         <div id="dashList"></div>
       </div>
 
       <div id="dashOrdersPanel" style="display:none;">
         <div id="dashOrdersList"></div>
+      </div>
+
+      <div id="dashSettingsPanel" style="display:none;">
+        <div class="card">
+          <div class="field"><label data-i18n="phoneLabel">رقم الهاتف</label><input type="tel" id="mSettingsPhone"></div>
+          <div class="field"><label data-i18n="orderWhatsappLabel">رقم واتساب استلام الطلبات</label><input type="tel" id="mSettingsOrderWhatsapp"></div>
+          <div class="field">
+            <label data-i18n="momoProvider">مزوّد الدفع (Mobile Money)</label>
+            <select id="mSettingsMomoProvider">
+              <option value="MTN MoMo">MTN MoMo</option>
+              <option value="M-Gurush">M-Gurush</option>
+              <option value="Digitel Cash">Digitel Cash</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="momoNumber">رقم حساب الدفع</label><input type="tel" id="mSettingsMomoNumber"></div>
+          <button class="btn" onclick="saveMerchantSettings()" data-i18n="saveSettings">حفظ التغييرات</button>
+        </div>
       </div>
 
       <div class="card" style="margin-top:6px;">
@@ -582,9 +608,25 @@
       <div class="chips" style="margin-bottom:16px;">
         <div class="chip active" id="driverTabAvailable" onclick="setDriverTab('available')" data-i18n="availableOrders">طلبات متاحة</div>
         <div class="chip" id="driverTabMine" onclick="setDriverTab('mine')" data-i18n="myDeliveries">توصيلاتي</div>
+        <div class="chip" id="driverTabSettings" onclick="setDriverTab('settings')" data-i18n="settingsTab">الإعدادات</div>
       </div>
       <div id="driverAvailablePanel"></div>
       <div id="driverMinePanel" style="display:none;"></div>
+      <div id="driverSettingsPanel" style="display:none;">
+        <div class="card">
+          <div class="field"><label data-i18n="phoneLabel">رقم الهاتف / واتساب</label><input type="tel" id="dSettingsPhone"></div>
+          <div class="field">
+            <label data-i18n="momoProvider">مزوّد الدفع (Mobile Money)</label>
+            <select id="dSettingsMomoProvider">
+              <option value="MTN MoMo">MTN MoMo</option>
+              <option value="M-Gurush">M-Gurush</option>
+              <option value="Digitel Cash">Digitel Cash</option>
+            </select>
+          </div>
+          <div class="field"><label data-i18n="momoNumber">رقم حساب الدفع</label><input type="tel" id="dSettingsMomoNumber"></div>
+          <button class="btn" onclick="saveDriverSettings()" data-i18n="saveSettings">حفظ التغييرات</button>
+        </div>
+      </div>
       <div class="card" style="margin-top:6px;">
         <div class="sub" style="margin:0;" data-i18n="momoPayoutNote">أرباحك تُحسب من طلباتك المكتملة، ويتم تحويلها يدويًا لحساب الدفع المسجّل لديك.</div>
       </div>
@@ -670,6 +712,10 @@ const I18N = {
     appName:"جوبا داش", tagline:"أكلك المفضل من جوبا لبيتك", phoneLabel:"رقم الهاتف", continueBtn:"متابعة", emailOrPhoneLabel:"البريد الإلكتروني أو رقم الهاتف",
     orText:"أو", guestLink:"الدخول كزائر", homeGreeting:"وين نطلب اليوم؟", homeSub:"توصيل سريع من أفضل مطاعم جوبا",
     searchPlaceholder:"دور على مطعم أو وجبة", cartTitle:"سلتي", trackTitle:"تتبع الطلب", driverAssigned:"السائق: أكوان دينق — دراجة نارية 🏍️",
+    deliveryCodeLabel:"رمز التسليم — أعطه للسائق عند الاستلام", driverNotAssigned:"لسه ما تم تعيين سائق — بنبلغك فور القبول",
+    pickupCodeLabel:"رمز تأكيد السائق", enterDeliveryCode:"اطلب رمز التسليم من الزبون", confirmDelivery:"تأكيد التسليم",
+    wrongDeliveryCode:"الرمز غير صحيح، تأكد من الزبون", editItem:"تعديل", updateItem:"تحديث الصنف",
+    settingsTab:"الإعدادات", orderWhatsappLabel:"رقم واتساب استلام الطلبات", saveSettings:"حفظ التغييرات", settingsSaved:"تم حفظ الإعدادات",
     callDriver:"اتصال بالسائق", aboutTitle:"من نحن", privacyTitle:"سياسة الخصوصية", ordersTitle:"طلباتي",
     driverTitle:"انضم كسائق", driverSub:"وصّل مع جوبا داش واربح دخل إضافي بوقتك الحر.", fullName:"الاسم الكامل",
     vehicleType:"نوع المركبة", motorcycle:"دراجة نارية", bicycle:"دراجة هوائية", car:"سيارة", area:"المنطقة",
@@ -767,6 +813,10 @@ const I18N = {
     appName:"JubaDash", tagline:"Your favorite Juba food, delivered", phoneLabel:"Phone number", continueBtn:"Continue", emailOrPhoneLabel:"Email or phone number",
     orText:"or", guestLink:"Continue as guest", homeGreeting:"What are we ordering today?", homeSub:"Fast delivery from Juba's best spots",
     searchPlaceholder:"Search restaurant or dish", cartTitle:"My Cart", trackTitle:"Track Order", driverAssigned:"Driver: Akuot Deng — Motorcycle 🏍️",
+    deliveryCodeLabel:"Delivery code — give it to the driver on receipt", driverNotAssigned:"No driver assigned yet — we'll let you know once one accepts",
+    pickupCodeLabel:"Driver confirmation code", enterDeliveryCode:"Ask the customer for their delivery code", confirmDelivery:"Confirm delivery",
+    wrongDeliveryCode:"Incorrect code, please check with the customer", editItem:"Edit", updateItem:"Update item",
+    settingsTab:"Settings", orderWhatsappLabel:"Order-receiving WhatsApp number", saveSettings:"Save changes", settingsSaved:"Settings saved",
     callDriver:"Call driver", aboutTitle:"About Us", privacyTitle:"Privacy Policy", ordersTitle:"My Orders",
     driverTitle:"Join as a Driver", driverSub:"Deliver with JubaDash and earn extra income on your own time.", fullName:"Full name",
     vehicleType:"Vehicle type", motorcycle:"Motorcycle", bicycle:"Bicycle", car:"Car", area:"Area",
@@ -884,29 +934,33 @@ try{
   console.error('Firebase failed to initialize (SDK blocked or offline). App will run without cloud saving.', e);
 }
 
+function genCode(){ return String(Math.floor(1000 + Math.random()*9000)); }
+
 async function saveOrderToFirestore(order){
   if(!db) return null;
   try{
+    const deliveryCode = genCode();
     const ref = await db.collection('orders').add({
       restaurantId: order.restaurantId || null,
-      customerId: state.currentCustomer ? state.currentCustomer.uid : null,
+      customerId: (auth && auth.currentUser) ? auth.currentUser.uid : null,
       restName: order.restName,
       items: order.lines.map(l=>({ name: l.item.n[state.lang], qty: l.qty, price: l.item.p })),
       total: order.total,
       status: 'placed',
       driverId: null,
+      deliveryCode,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    return ref.id;
+    return {id: ref.id, deliveryCode};
   }catch(e){ console.error('Firestore order save failed', e); return null; }
 }
 
 async function loadOrdersFromFirestore(){
-  // Guests have no account, so we only ever show their own session's orders (state.orders),
-  // never other people's — this also avoids exposing anyone else's order data.
-  if(!db || !state.currentCustomer) return;
+  // Every user (registered or anonymous guest) can only ever fetch orders tied to their own auth uid —
+  // this also avoids exposing anyone else's order data.
+  if(!db || !auth || !auth.currentUser) return;
   try{
-    const snap = await db.collection('orders').where('customerId','==',state.currentCustomer.uid).orderBy('createdAt','desc').limit(20).get();
+    const snap = await db.collection('orders').where('customerId','==',auth.currentUser.uid).orderBy('createdAt','desc').limit(20).get();
     state.orders = snap.docs.map(doc=>{
       const d = doc.data();
       return {
@@ -978,7 +1032,7 @@ async function loadRestaurantsFromFirestore(){
         tag:{ar:d.area || 'مطعم مسجّل', en:d.area || 'Registered restaurant'},
         color: pickColor(doc.id), time:'30-40', rating:5.0, emoji:'🍽️',
         menu: menusByRestaurant[doc.id] || [],
-        dynamic:true, ownerId:doc.id,
+        dynamic:true, ownerId:doc.id, orderWhatsapp:d.orderWhatsapp||null,
       };
     });
     ALL_RESTAURANTS = [...RESTAURANTS, ...dynamicRestaurants];
@@ -993,6 +1047,7 @@ let state = {
   merchantMenu: [],
   currentUser:null, // {uid, role:'merchant'|'driver', profile:{...}}
   currentCustomer:null, // {uid, profile:{name, contact}}
+  activeOrderId:null, activeDeliveryCode:null, activeDriverPhone:null,
 };
 
 function t(key){ return I18N[state.lang][key] || key; }
@@ -1090,6 +1145,9 @@ function setCustomerAuthTab(tab){
   document.getElementById('custAuthError').textContent = '';
 }
 function continueAsGuest(){
+  if(auth && !auth.currentUser){
+    auth.signInAnonymously().catch(e=>console.error('anonymous sign-in failed', e));
+  }
   showToast(t('toastLoggedIn'));
   go('home');
 }
@@ -1264,14 +1322,18 @@ function orderViaWhatsapp(){
   lines.forEach(l=>{ msg += `- ${l.item.n[state.lang]} ×${l.qty} = ${l.lineTotal.toLocaleString()} ${CURRENCY}\n`; });
   msg += state.lang==='ar' ? `\nالإجمالي: ${total.toLocaleString()} ${CURRENCY}` : `\nTotal: ${total.toLocaleString()} ${CURRENCY}`;
 
-  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  const targetNumber = lines[0].r.orderWhatsapp || WHATSAPP_NUMBER;
+  const url = `https://wa.me/${targetNumber}?text=${encodeURIComponent(msg)}`;
   const order = {restaurantId: lines[0].r.id, restName, lines, total, time:new Date(), status:1};
   state.orders.unshift(order);
-  saveOrderToFirestore(order);
+  saveOrderToFirestore(order).then(result=>{
+    if(result){ state.activeOrderId = result.id; state.activeDeliveryCode = result.deliveryCode; renderTracking(); }
+  });
   state.cart = [];
   updateCartBadge();
   window.open(url, '_blank');
   showToast(t('toastSubmitted'));
+  requestNotificationPermission();
   go('tracking');
 }
 
@@ -1296,18 +1358,62 @@ function renderOrders(){
 /* =========================================================
    TRACKING
 ========================================================= */
+let _trackingUnsub = null;
+const TRACK_STATUS_STEP = {placed:0, preparing:1, ready:1, accepted:2, delivered:3};
 function renderTracking(){
-  const steps = [
-    {key:'stepPlaced', time:'—'},
-    {key:'stepPrep', time:'—'},
-    {key:'stepWay', time:'—'},
-    {key:'stepDelivered', time:'—'},
-  ];
-  document.getElementById('trackSteps').innerHTML = steps.map((s,i)=>`
-    <div class="step ${i<2?'done':''}">
-      <div class="st-title">${t(s.key)}</div>
-      <div class="st-time">${i<2 ? (state.lang==='ar'?'تم':'Done') : (state.lang==='ar'?'قريبًا':'Upcoming')}</div>
-    </div>`).join('');
+  const steps = ['stepPlaced','stepPrep','stepWay','stepDelivered'];
+  document.getElementById('trackDeliveryCode').textContent = state.activeDeliveryCode || '----';
+
+  if(_trackingUnsub){ _trackingUnsub(); _trackingUnsub = null; }
+  let lastStatus = null;
+
+  function renderStatic(stepIndex){
+    document.getElementById('trackSteps').innerHTML = steps.map((key,i)=>`
+      <div class="step ${i<=stepIndex?'done':''}">
+        <div class="st-title">${t(key)}</div>
+        <div class="st-time">${i<=stepIndex ? (state.lang==='ar'?'تم':'Done') : (state.lang==='ar'?'قريبًا':'Upcoming')}</div>
+      </div>`).join('');
+  }
+
+  if(!db || !state.activeOrderId){
+    renderStatic(0);
+    document.getElementById('trackDriverInfo').textContent = t('driverNotAssigned');
+    document.getElementById('trackCallDriverBtn').style.display = 'none';
+    return;
+  }
+
+  _trackingUnsub = db.collection('orders').doc(state.activeOrderId).onSnapshot(doc=>{
+    if(!doc.exists) return;
+    const d = doc.data();
+    const stepIndex = TRACK_STATUS_STEP[d.status] ?? 0;
+    renderStatic(stepIndex);
+
+    if(d.driverId){
+      document.getElementById('trackDriverInfo').textContent =
+        (state.lang==='ar'?'السائق: ':'Driver: ') + (d.driverName||'') + (d.driverPhone ? ' — 🏍️' : '');
+      document.getElementById('trackCallDriverBtn').style.display = d.driverPhone ? 'inline-block' : 'none';
+      state.activeDriverPhone = d.driverPhone || null;
+    } else {
+      document.getElementById('trackDriverInfo').textContent = t('driverNotAssigned');
+      document.getElementById('trackCallDriverBtn').style.display = 'none';
+    }
+
+    if(lastStatus !== null && lastStatus !== d.status){
+      const msgs = {
+        preparing: state.lang==='ar'?'يتم تحضير طلبك الآن 👨‍🍳':'Your order is being prepared 👨‍🍳',
+        ready: state.lang==='ar'?'طلبك جاهز، بانتظار سائق 📦':'Your order is ready, waiting for a driver 📦',
+        accepted: state.lang==='ar'?'سائق في الطريق إليك 🏍️':'A driver is on the way 🏍️',
+        delivered: state.lang==='ar'?'تم توصيل طلبك! بالهنا 🎉':'Your order has been delivered! Enjoy 🎉',
+      };
+      if(msgs[d.status]) notifyUser(state.lang==='ar'?'جوبا داش':'JubaDash', msgs[d.status]);
+    }
+    lastStatus = d.status;
+  }, e=>console.error('tracking listener failed', e));
+}
+function callAssignedDriver(){
+  if(!state.activeDriverPhone) return;
+  const msg = state.lang==='ar' ? 'مرحبًا، بخصوص طلبي من جوبا داش' : 'Hi, about my JubaDash order';
+  window.open(`https://wa.me/${normalizePhoneDigits(state.activeDriverPhone)}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 /* =========================================================
@@ -1397,6 +1503,7 @@ async function merchantSignup(){
   const name = document.getElementById('mSignupName').value.trim();
   const area = document.getElementById('mSignupArea').value.trim();
   const phone = document.getElementById('mSignupPhone').value.trim();
+  const orderWhatsapp = document.getElementById('mSignupOrderWhatsapp').value.trim();
   const momoProvider = document.getElementById('mSignupMomoProvider').value;
   const momoNumber = document.getElementById('mSignupMomoNumber').value.trim();
   const email = document.getElementById('mSignupEmail').value.trim();
@@ -1405,9 +1512,10 @@ async function merchantSignup(){
   try{
     const idDocBase64 = await readAndCompressImage('mSignupIdDoc', 900, 0.6);
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
-    // Public profile — visible to customers browsing restaurants (name/area only)
+    // Public profile — visible to customers browsing restaurants (name/area/order number only)
     await db.collection('restaurants').doc(cred.user.uid).set({
       name, area, ownerId: cred.user.uid,
+      orderWhatsapp: orderWhatsapp ? normalizePhoneDigits(orderWhatsapp) : null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     // Private data — phone, payout number, ID document — never exposed publicly
@@ -1510,10 +1618,41 @@ function initAuthListener(){
 function setDashTab(tab){
   document.getElementById('dashTabMenu').classList.toggle('active', tab==='menu');
   document.getElementById('dashTabOrders').classList.toggle('active', tab==='orders');
+  document.getElementById('dashTabSettings').classList.toggle('active', tab==='settings');
   document.getElementById('dashMenuPanel').style.display = tab==='menu' ? 'block' : 'none';
   document.getElementById('dashOrdersPanel').style.display = tab==='orders' ? 'block' : 'none';
+  document.getElementById('dashSettingsPanel').style.display = tab==='settings' ? 'block' : 'none';
   if(tab==='orders') loadMyRestaurantOrders();
+  if(tab==='settings') fillMerchantSettings();
 }
+function fillMerchantSettings(){
+  if(!state.currentUser) return;
+  const p = state.currentUser.profile;
+  document.getElementById('mSettingsPhone').value = p.phone || '';
+  document.getElementById('mSettingsOrderWhatsapp').value = p.orderWhatsapp || '';
+  document.getElementById('mSettingsMomoProvider').value = p.momoProvider || 'MTN MoMo';
+  document.getElementById('mSettingsMomoNumber').value = p.momoNumber || '';
+}
+async function saveMerchantSettings(){
+  if(!db || !state.currentUser) return;
+  const phone = document.getElementById('mSettingsPhone').value.trim();
+  const orderWhatsapp = document.getElementById('mSettingsOrderWhatsapp').value.trim();
+  const momoProvider = document.getElementById('mSettingsMomoProvider').value;
+  const momoNumber = document.getElementById('mSettingsMomoNumber').value.trim();
+  try{
+    await db.collection('restaurants').doc(state.currentUser.uid).update({
+      orderWhatsapp: orderWhatsapp ? normalizePhoneDigits(orderWhatsapp) : null,
+    });
+    await db.collection('restaurantPrivate').doc(state.currentUser.uid).update({ phone, momoProvider, momoNumber });
+    state.currentUser.profile.phone = phone;
+    state.currentUser.profile.orderWhatsapp = orderWhatsapp ? normalizePhoneDigits(orderWhatsapp) : null;
+    state.currentUser.profile.momoProvider = momoProvider;
+    state.currentUser.profile.momoNumber = momoNumber;
+    showToast(t('settingsSaved'));
+    loadRestaurantsFromFirestore();
+  }catch(e){ console.error('save merchant settings failed', e); }
+}
+let editingMenuItemIdx = null;
 function renderDash(){
   if(!state.currentUser) return;
   document.getElementById('dashList').innerHTML = state.merchantMenu.map((item,idx)=>`
@@ -1523,8 +1662,19 @@ function renderDash(){
         <div class="di-name">${item.n[state.lang]}</div>
         <div class="di-price">${item.p.toLocaleString()} ${CURRENCY}</div>
       </div>
+      <button class="del-btn" style="background:#FFF3E0;color:#B3480C;" onclick="startEditMenuItem(${idx})">✏️</button>
       <button class="del-btn" onclick="removeMenuItem(${idx})">✕</button>
     </div>`).join('');
+}
+function startEditMenuItem(idx){
+  editingMenuItemIdx = idx;
+  const item = state.merchantMenu[idx];
+  document.getElementById('newItemName').value = item.n.ar;
+  document.getElementById('newItemPrice').value = item.p;
+  document.getElementById('newItemEmoji').value = item.e;
+  document.getElementById('newItemImageUrl').value = item.img || '';
+  document.getElementById('addItemBtn').textContent = t('updateItem');
+  document.getElementById('newItemName').scrollIntoView({behavior:'smooth', block:'center'});
 }
 async function addMenuItem(){
   if(!state.currentUser){ return; }
@@ -1533,16 +1683,30 @@ async function addMenuItem(){
   const emoji = document.getElementById('newItemEmoji').value.trim() || '🍽️';
   const imageUrl = document.getElementById('newItemImageUrl').value.trim();
   if(!name || !price){ showToast(state.lang==='ar' ? 'الرجاء إدخال الاسم والسعر' : 'Please enter name and price'); return; }
-  const newItem = {n:{ar:name,en:name}, d:{ar:'',en:''}, p:price, e:emoji, img:imageUrl||null};
-  state.merchantMenu.push(newItem);
+
+  if(editingMenuItemIdx !== null){
+    const item = state.merchantMenu[editingMenuItemIdx];
+    item.n = {ar:name,en:name}; item.p = price; item.e = emoji; item.img = imageUrl || null;
+    renderDash();
+    if(item._docId && db){
+      try{ await db.collection('menuItems').doc(item._docId).update({name, price, emoji, imageUrl: imageUrl||null}); }
+      catch(e){ console.error('menu item update failed', e); }
+    }
+    editingMenuItemIdx = null;
+    document.getElementById('addItemBtn').textContent = t('addItem');
+    showToast(state.lang==='ar' ? 'تم تحديث الصنف' : 'Item updated');
+  } else {
+    const newItem = {n:{ar:name,en:name}, d:{ar:'',en:''}, p:price, e:emoji, img:imageUrl||null};
+    state.merchantMenu.push(newItem);
+    renderDash();
+    showToast(t('toastItemAdded'));
+    const docId = await saveMenuItemToFirestore(newItem);
+    newItem._docId = docId;
+  }
   document.getElementById('newItemName').value='';
   document.getElementById('newItemPrice').value='';
   document.getElementById('newItemEmoji').value='';
   document.getElementById('newItemImageUrl').value='';
-  showToast(t('toastItemAdded'));
-  renderDash();
-  const docId = await saveMenuItemToFirestore(newItem);
-  newItem._docId = docId;
   loadRestaurantsFromFirestore();
 }
 async function removeMenuItem(idx){
@@ -1586,6 +1750,7 @@ function loadMyRestaurantOrders(){
           <div class="sub" style="margin-bottom:8px;">${(o.total||0).toLocaleString()} ${CURRENCY} • ${ORDER_STATUS_LABEL[state.lang][o.status]||o.status}</div>
           ${o.status==='placed' ? `<button class="btn ghost btn-sm" onclick="updateOrderStatus('${o.id}','preparing')">${state.lang==='ar'?'بدء التحضير':'Start preparing'}</button>` : ''}
           ${o.status==='preparing' ? `<button class="btn ghost btn-sm" onclick="updateOrderStatus('${o.id}','ready')">${state.lang==='ar'?'جاهز الآن':'Mark ready'}</button>` : ''}
+          ${o.status==='accepted' && o.pickupCode ? `<div class="sub">${state.lang==='ar'?'السائق: ':'Driver: '}${o.driverName||''} — ${t('pickupCodeLabel')}: <strong style="color:var(--orange-600);">${o.pickupCode}</strong></div>` : ''}
         </div>`).join('') : `<div class="empty-state"><div class="sub">${state.lang==='ar'?'لا يوجد طلبات واردة بعد':'No incoming orders yet'}</div></div>`;
     }, e=>console.error('merchant orders listener failed', e));
 }
@@ -1601,9 +1766,33 @@ async function updateOrderStatus(orderId, status){
 function setDriverTab(tab){
   document.getElementById('driverTabAvailable').classList.toggle('active', tab==='available');
   document.getElementById('driverTabMine').classList.toggle('active', tab==='mine');
+  document.getElementById('driverTabSettings').classList.toggle('active', tab==='settings');
   document.getElementById('driverAvailablePanel').style.display = tab==='available' ? 'block' : 'none';
   document.getElementById('driverMinePanel').style.display = tab==='mine' ? 'block' : 'none';
-  if(tab==='mine') loadMyDeliveries(); else loadAvailableOrders();
+  document.getElementById('driverSettingsPanel').style.display = tab==='settings' ? 'block' : 'none';
+  if(tab==='mine') loadMyDeliveries();
+  else if(tab==='settings') fillDriverSettings();
+  else loadAvailableOrders();
+}
+function fillDriverSettings(){
+  if(!state.currentUser) return;
+  const p = state.currentUser.profile;
+  document.getElementById('dSettingsPhone').value = p.phone || '';
+  document.getElementById('dSettingsMomoProvider').value = p.momoProvider || 'MTN MoMo';
+  document.getElementById('dSettingsMomoNumber').value = p.momoNumber || '';
+}
+async function saveDriverSettings(){
+  if(!db || !state.currentUser) return;
+  const phone = document.getElementById('dSettingsPhone').value.trim();
+  const momoProvider = document.getElementById('dSettingsMomoProvider').value;
+  const momoNumber = document.getElementById('dSettingsMomoNumber').value.trim();
+  try{
+    await db.collection('drivers').doc(state.currentUser.uid).update({ phone, momoProvider, momoNumber });
+    state.currentUser.profile.phone = phone;
+    state.currentUser.profile.momoProvider = momoProvider;
+    state.currentUser.profile.momoNumber = momoNumber;
+    showToast(t('settingsSaved'));
+  }catch(e){ console.error('save driver settings failed', e); }
 }
 function renderDriverDash(){ setDriverTab('available'); }
 let _driverAvailableUnsub = null;
@@ -1642,20 +1831,32 @@ async function loadMyDeliveries(){
       <div class="card">
         <div style="font-weight:800;margin-bottom:6px;">${o.restName}</div>
         <div class="sub" style="margin-bottom:8px;">${(o.total||0).toLocaleString()} ${CURRENCY} • ${ORDER_STATUS_LABEL[state.lang][o.status]||o.status}</div>
-        ${o.status!=='delivered' ? `<button class="btn btn-sm" onclick="markDelivered('${o.id}')">${state.lang==='ar'?'تم التسليم':'Mark delivered'}</button>` : ''}
+        ${o.pickupCode && o.status!=='delivered' ? `<div class="sub" style="margin-bottom:8px;">${t('pickupCodeLabel')}: <strong style="color:var(--orange-600);">${o.pickupCode}</strong></div>` : ''}
+        ${o.status!=='delivered' ? `<button class="btn btn-sm" onclick="markDelivered('${o.id}','${o.deliveryCode||''}')">${state.lang==='ar'?'تم التسليم':'Mark delivered'}</button>` : ''}
       </div>`).join('') : `<div class="empty-state"><div class="sub">${state.lang==='ar'?'لا يوجد توصيلات حاليًا':'No deliveries yet'}</div></div>`;
   }catch(e){ console.error('load my deliveries failed', e); }
 }
 async function acceptOrder(orderId){
   if(!db || !state.currentUser) return;
   try{
-    await db.collection('orders').doc(orderId).update({driverId: state.currentUser.uid, status:'accepted'});
+    const pickupCode = genCode();
+    await db.collection('orders').doc(orderId).update({
+      driverId: state.currentUser.uid, status:'accepted', pickupCode,
+      driverName: state.currentUser.profile.name || '',
+      driverPhone: state.currentUser.profile.phone || '',
+    });
     showToast(state.lang==='ar'?'تم قبول الطلب':'Order accepted');
     loadAvailableOrders();
   }catch(e){ console.error('accept order failed', e); }
 }
-async function markDelivered(orderId){
+async function markDelivered(orderId, expectedCode){
   if(!db) return;
+  const entered = prompt(state.lang==='ar' ? 'أدخل رمز التسليم من الزبون:' : 'Enter the customer\'s delivery code:');
+  if(entered === null) return;
+  if(entered.trim() !== String(expectedCode||'')){
+    showToast(t('wrongDeliveryCode'));
+    return;
+  }
   try{ await db.collection('orders').doc(orderId).update({status:'delivered'}); loadMyDeliveries(); }
   catch(e){ console.error('mark delivered failed', e); }
 }
