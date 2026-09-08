@@ -410,15 +410,15 @@
       <div class="sub" data-i18n="driverSub">وصّل مع جوبا داش واربح دخل إضافي بوقتك الحر.</div>
       <div class="card" style="text-align:center;">
         <div style="font-size:40px;margin-bottom:8px;">🏍️</div>
-        <div style="font-weight:800;margin-bottom:12px;" data-i18n="driverFormIntro">املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا خلال 24 ساعة</div>
-        <button class="btn" onclick="window.open(DRIVER_FORM_URL,'_blank')" data-i18n="openDriverForm">📝 فتح نموذج التسجيل كسائق</button>
+        <div style="font-weight:800;margin-bottom:12px;" data-i18n="driverAccountIntro">أنشئ حسابك الآن وابدأ استقبال طلبات التوصيل فورًا</div>
+        <button class="btn" onclick="go('driverAuth')" data-i18n="createDriverAccount">🚀 إنشاء حساب سائق</button>
       </div>
       <div class="card" style="text-align:center;">
         <div style="font-weight:800;margin-bottom:8px;" data-i18n="needDriverNow">تحتاج سائق الآن لتوصيل سريع؟</div>
         <button class="btn whatsapp-btn" onclick="requestNearestDriver()">🟢 <span data-i18n="requestDriver">اطلب أقرب سائق عبر واتساب</span></button>
       </div>
       <div class="link-row">
-        <a onclick="go('driverAuth')" data-i18n="haveDriverAccount">عندي حساب سائق بالفعل - تسجيل الدخول</a>
+        <a onclick="window.open(DRIVER_FORM_URL,'_blank')" data-i18n="preferFormDriver">أفضّل تعبئة نموذج بدلًا من ذلك</a>
       </div>
     </div>
   </div>
@@ -434,11 +434,11 @@
       <div class="sub" data-i18n="merchantSub">اعرض مطعمك أو متجرك لآلاف الزبائن في جوبا.</div>
       <div class="card" style="text-align:center;">
         <div style="font-size:40px;margin-bottom:8px;">🍽️</div>
-        <div style="font-weight:800;margin-bottom:12px;" data-i18n="merchantFormIntro">املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا لإضافة مطعمك</div>
-        <button class="btn" onclick="window.open(MERCHANT_FORM_URL,'_blank')" data-i18n="openMerchantForm">📝 فتح نموذج التسجيل كصاحب مطعم</button>
+        <div style="font-weight:800;margin-bottom:12px;" data-i18n="merchantAccountIntro">أنشئ حساب مطعمك الآن وابدأ استقبال الطلبات فورًا</div>
+        <button class="btn" onclick="go('merchantAuth')" data-i18n="createMerchantAccount">🚀 إنشاء حساب مطعم</button>
       </div>
       <div class="link-row">
-        <a onclick="go('merchantAuth')" data-i18n="goToMerchantDash">إنشاء حساب / تسجيل الدخول للوحة تحكم مطعمي</a>
+        <a onclick="window.open(MERCHANT_FORM_URL,'_blank')" data-i18n="preferFormMerchant">أفضّل تعبئة نموذج بدلًا من ذلك</a>
       </div>
     </div>
   </div>
@@ -473,6 +473,11 @@
           </select>
         </div>
         <div class="field"><label data-i18n="momoNumber">رقم حساب الدفع</label><input type="tel" id="mSignupMomoNumber"></div>
+        <div class="field">
+          <label data-i18n="idDocLabel">صورة الهوية / السجل التجاري (اختياري)</label>
+          <input type="file" accept="image/*" capture="environment" id="mSignupIdDoc">
+          <div class="sub" style="margin:4px 0 0;" data-i18n="idDocNote">تُستخدم للتحقق من صاحب المطعم فقط، ولا تظهر للزبائن</div>
+        </div>
         <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="mSignupEmail"></div>
         <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="mSignupPass"></div>
         <button class="btn" onclick="merchantSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
@@ -518,6 +523,11 @@
           </select>
         </div>
         <div class="field"><label data-i18n="momoNumber">رقم حساب الدفع</label><input type="tel" id="dSignupMomoNumber"></div>
+        <div class="field">
+          <label data-i18n="idDocLabelDriver">صورة الهوية الوطنية / رخصة القيادة</label>
+          <input type="file" accept="image/*" capture="environment" id="dSignupIdDoc">
+          <div class="sub" style="margin:4px 0 0;" data-i18n="idDocNote">تُستخدم للتحقق من هوية السائق فقط، ولا تظهر للزبائن</div>
+        </div>
         <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="dSignupEmail"></div>
         <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="dSignupPass"></div>
         <button class="btn" onclick="driverSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
@@ -678,6 +688,11 @@ const I18N = {
     needDriverNow:"تحتاج سائق الآن لتوصيل سريع؟", driverFormIntro:"املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا خلال 24 ساعة",
     openDriverForm:"📝 فتح نموذج التسجيل كسائق", merchantFormIntro:"املأ نموذج التسجيل الرسمي وسيتواصل معك فريقنا لإضافة مطعمك",
     openMerchantForm:"📝 فتح نموذج التسجيل كصاحب مطعم",
+    driverAccountIntro:"أنشئ حسابك الآن وابدأ استقبال طلبات التوصيل فورًا", createDriverAccount:"🚀 إنشاء حساب سائق",
+    preferFormDriver:"أفضّل تعبئة نموذج بدلًا من ذلك", merchantAccountIntro:"أنشئ حساب مطعمك الآن وابدأ استقبال الطلبات فورًا",
+    createMerchantAccount:"🚀 إنشاء حساب مطعم", preferFormMerchant:"أفضّل تعبئة نموذج بدلًا من ذلك",
+    idDocLabel:"صورة الهوية / السجل التجاري (اختياري)", idDocLabelDriver:"صورة الهوية الوطنية / رخصة القيادة",
+    idDocNote:"تُستخدم للتحقق من الهوية فقط، ولا تظهر للزبائن",
     haveDriverAccount:"عندي حساب سائق بالفعل - تسجيل الدخول", goToMerchantDash:"إنشاء حساب / تسجيل الدخول للوحة تحكم مطعمي",
     merchantDashLink:"لوحة تحكم مطعمي", driverDashLink:"لوحة تحكم السائق",
     merchantAuthTitle:"حساب صاحب المطعم", driverAuthTitle:"حساب السائق", loginTab:"تسجيل الدخول", signupTab:"حساب جديد",
@@ -770,6 +785,11 @@ const I18N = {
     needDriverNow:"Need a driver right now for a quick delivery?", driverFormIntro:"Fill out the official application form and our team will contact you within 24 hours",
     openDriverForm:"📝 Open driver application form", merchantFormIntro:"Fill out the official application form and our team will contact you to add your restaurant",
     openMerchantForm:"📝 Open merchant application form",
+    driverAccountIntro:"Create your account now and start receiving delivery orders instantly", createDriverAccount:"🚀 Create driver account",
+    preferFormDriver:"I'd rather fill out a form instead", merchantAccountIntro:"Create your restaurant account now and start receiving orders instantly",
+    createMerchantAccount:"🚀 Create restaurant account", preferFormMerchant:"I'd rather fill out a form instead",
+    idDocLabel:"ID photo / business registration (optional)", idDocLabelDriver:"National ID / driving license photo",
+    idDocNote:"Used only to verify identity — never shown to customers",
     haveDriverAccount:"I already have a driver account - Log in", goToMerchantDash:"Create account / log in to my restaurant dashboard",
     merchantDashLink:"My Restaurant Dashboard", driverDashLink:"Driver Dashboard",
     merchantAuthTitle:"Restaurant Owner Account", driverAuthTitle:"Driver Account", loginTab:"Log in", signupTab:"New account",
@@ -958,7 +978,7 @@ async function loadRestaurantsFromFirestore(){
         tag:{ar:d.area || 'مطعم مسجّل', en:d.area || 'Registered restaurant'},
         color: pickColor(doc.id), time:'30-40', rating:5.0, emoji:'🍽️',
         menu: menusByRestaurant[doc.id] || [],
-        dynamic:true, ownerId:doc.id, momoProvider:d.momoProvider, momoNumber:d.momoNumber,
+        dynamic:true, ownerId:doc.id,
       };
     });
     ALL_RESTAURANTS = [...RESTAURANTS, ...dynamicRestaurants];
@@ -1045,11 +1065,22 @@ function notifyUser(title, body){
 /* =========================================================
    CUSTOMER LOGIN / SIGNUP
 ========================================================= */
+function normalizePhoneDigits(digits){
+  digits = digits.replace(/[^0-9]/g,'');
+  if(digits.startsWith('211')) return digits;
+  if(digits.startsWith('0')) return '211' + digits.slice(1);
+  if(digits.length === 9) return '211' + digits;
+  return digits;
+}
 function identifierToEmail(id){
   id = id.trim();
   if(id.includes('@')) return id.toLowerCase();
-  const digits = id.replace(/[^0-9]/g,'');
-  return digits + '@jubadash.local';
+  return normalizePhoneDigits(id) + '@jubadash.local';
+}
+async function maybeSendEmailVerification(cred, rawId){
+  if(!rawId.includes('@')) return false;
+  try{ await cred.user.sendEmailVerification(); return true; }
+  catch(e){ console.error('verification email failed', e); return false; }
 }
 function setCustomerAuthTab(tab){
   document.getElementById('custTabLogin').classList.toggle('active', tab==='login');
@@ -1075,7 +1106,8 @@ async function customerSignup(){
       name, contact: rawId, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     document.getElementById('custAuthError').textContent = '';
-    showToast((state.lang==='ar' ? 'مرحبًا بك في جوبا داش، ' : 'Welcome to JubaDash, ') + name + '! 👋');
+    const sentVerification = await maybeSendEmailVerification(cred, rawId);
+    showToast((state.lang==='ar' ? 'مرحبًا بك في جوبا داش، ' : 'Welcome to JubaDash, ') + name + '! 👋' + (sentVerification ? (state.lang==='ar'?' تحقق من بريدك لتأكيده.':' Check your email to confirm it.') : ''));
   }catch(e){ document.getElementById('custAuthError').textContent = authErrorMessage(e); }
 }
 async function customerLogin(){
@@ -1308,9 +1340,56 @@ function setAuthTab(role, tab){
   tabSignup.classList.toggle('active', tab==='signup');
 }
 
+function readAndCompressImage(inputId, maxDim, quality){
+  return new Promise((resolve)=>{
+    const input = document.getElementById(inputId);
+    const file = input && input.files && input.files[0];
+    if(!file){ resolve(null); return; }
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = new Image();
+      img.onload = function(){
+        let w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = function(){ resolve(null); };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function(){ resolve(null); };
+    reader.readAsDataURL(file);
+  });
+}
+
 function authErrorMessage(e){
-  if(state.lang==='ar') return 'حدث خطأ: تأكد من البريد وكلمة المرور (6 أحرف على الأقل)';
-  return 'Error: check your email and password (6+ characters)';
+  const code = e && e.code;
+  const ar = {
+    'auth/wrong-password': 'كلمة المرور غير صحيحة',
+    'auth/invalid-credential': 'البيانات المدخلة غير صحيحة — تأكد من البريد/الهاتف وكلمة المرور',
+    'auth/user-not-found': 'لا يوجد حساب بهذا البريد أو رقم الهاتف — جرّب "حساب جديد"',
+    'auth/email-already-in-use': 'يوجد حساب مسجّل بالفعل بهذا البريد أو رقم الهاتف — جرّب "تسجيل الدخول"',
+    'auth/weak-password': 'كلمة المرور قصيرة جدًا — استخدم 6 أحرف على الأقل',
+    'auth/invalid-email': 'صيغة البريد أو رقم الهاتف غير صحيحة',
+    'auth/too-many-requests': 'محاولات كثيرة جدًا — حاول لاحقًا',
+    'auth/network-request-failed': 'مشكلة في الاتصال بالإنترنت',
+  };
+  const en = {
+    'auth/wrong-password': 'Incorrect password',
+    'auth/invalid-credential': 'Incorrect details — check your email/phone and password',
+    'auth/user-not-found': 'No account found with this email or phone — try "New account"',
+    'auth/email-already-in-use': 'An account already exists with this email or phone — try "Log in"',
+    'auth/weak-password': 'Password is too short — use at least 6 characters',
+    'auth/invalid-email': 'Invalid email or phone format',
+    'auth/too-many-requests': 'Too many attempts — please try again later',
+    'auth/network-request-failed': 'Network connection problem',
+  };
+  const dict = state.lang==='ar' ? ar : en;
+  if(code && dict[code]) return dict[code];
+  return state.lang==='ar' ? 'حدث خطأ غير متوقع، حاول مرة أخرى' : 'An unexpected error occurred, please try again';
 }
 
 async function merchantSignup(){
@@ -1324,12 +1403,20 @@ async function merchantSignup(){
   const pass = document.getElementById('mSignupPass').value;
   if(!name || !email || !pass){ document.getElementById('authError').textContent = state.lang==='ar'?'الرجاء تعبئة الاسم والبريد وكلمة المرور':'Please fill in name, email and password'; return; }
   try{
+    const idDocBase64 = await readAndCompressImage('mSignupIdDoc', 900, 0.6);
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    // Public profile — visible to customers browsing restaurants (name/area only)
     await db.collection('restaurants').doc(cred.user.uid).set({
-      name, area, phone, momoProvider, momoNumber, ownerId: cred.user.uid,
+      name, area, ownerId: cred.user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    // Private data — phone, payout number, ID document — never exposed publicly
+    await db.collection('restaurantPrivate').doc(cred.user.uid).set({
+      phone, momoProvider, momoNumber, idDocument: idDocBase64 || null, verificationStatus: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     document.getElementById('authError').textContent = '';
+    await maybeSendEmailVerification(cred, email);
     showToast(state.lang==='ar' ? 'تم إنشاء حساب مطعمك بنجاح' : 'Restaurant account created successfully');
   }catch(e){ document.getElementById('authError').textContent = authErrorMessage(e); }
 }
@@ -1354,12 +1441,15 @@ async function driverSignup(){
   const pass = document.getElementById('dSignupPass').value;
   if(!name || !email || !pass){ document.getElementById('driverAuthError').textContent = state.lang==='ar'?'الرجاء تعبئة الاسم والبريد وكلمة المرور':'Please fill in name, email and password'; return; }
   try{
+    const idDocBase64 = await readAndCompressImage('dSignupIdDoc', 900, 0.6);
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     await db.collection('drivers').doc(cred.user.uid).set({
       name, phone, vehicle, momoProvider, momoNumber, ownerId: cred.user.uid,
+      idDocument: idDocBase64 || null, verificationStatus: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     document.getElementById('driverAuthError').textContent = '';
+    await maybeSendEmailVerification(cred, email);
     showToast(state.lang==='ar' ? 'تم إنشاء حساب السائق بنجاح' : 'Driver account created successfully');
   }catch(e){ document.getElementById('driverAuthError').textContent = authErrorMessage(e); }
 }
@@ -1388,7 +1478,12 @@ function initAuthListener(){
     try{
       const restDoc = await db.collection('restaurants').doc(user.uid).get();
       if(restDoc.exists){
-        state.currentUser = {uid:user.uid, role:'merchant', profile:restDoc.data()};
+        let profile = restDoc.data();
+        try{
+          const privDoc = await db.collection('restaurantPrivate').doc(user.uid).get();
+          if(privDoc.exists) profile = {...profile, ...privDoc.data()};
+        }catch(e){ console.error('restaurantPrivate fetch failed', e); }
+        state.currentUser = {uid:user.uid, role:'merchant', profile};
         loadMyMenu();
         if(document.getElementById('screen-merchantAuth').classList.contains('active')) go('merchantDash');
         return;
