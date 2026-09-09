@@ -313,6 +313,14 @@
 
 <div id="phone">
 
+  <!-- ============ SESSION RESTORE (shown instead of login while we confirm a saved session) ============ -->
+  <div class="screen" id="screen-loading">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:14px;">
+      <div style="font-size:44px;">🏍️</div>
+      <div class="sub" data-i18n="restoringSession">Loading your account…</div>
+    </div>
+  </div>
+
   <!-- ============ LOGIN ============ -->
   <div class="screen active" id="screen-login">
     <div class="login-hero">
@@ -732,6 +740,25 @@
 
 <script>
 /* =========================================================
+   SESSION PERSISTENCE (localStorage hint + Firebase Auth as source of truth)
+========================================================= */
+const SESSION_HINT_KEY = 'jubadash_session_hint';
+function saveSessionHint(role){ try{ localStorage.setItem(SESSION_HINT_KEY, role); }catch(e){} }
+function clearSessionHint(){ try{ localStorage.removeItem(SESSION_HINT_KEY); }catch(e){} }
+function readSessionHint(){ try{ return localStorage.getItem(SESSION_HINT_KEY); }catch(e){ return null; } }
+
+// Runs immediately (before Firebase even loads) so returning users never see the
+// login form flash — we optimistically show a loading screen and let the real
+// Firebase session confirm (or correct) it moments later.
+(function(){
+  if(readSessionHint()){
+    const loginEl = document.getElementById('screen-login');
+    const loadingEl = document.getElementById('screen-loading');
+    if(loginEl && loadingEl){ loginEl.classList.remove('active'); loadingEl.classList.add('active'); }
+  }
+})();
+
+/* =========================================================
    DATA
 ========================================================= */
 const CURRENCY = "SSP";
@@ -770,7 +797,7 @@ const RESTAURANTS = [
 const I18N = {
   ar:{
     appName:"جوبا داش", tagline:"أكلك المفضل من جوبا لبيتك", phoneLabel:"رقم الهاتف", continueBtn:"متابعة", emailOrPhoneLabel:"البريد الإلكتروني أو رقم الهاتف",
-    orText:"أو", guestLink:"الدخول كزائر", homeGreeting:"وين نطلب اليوم؟", homeSub:"توصيل سريع من أفضل مطاعم جوبا",
+    orText:"أو", guestLink:"الدخول كزائر", restoringSession:"جارِ تحميل حسابك…", homeGreeting:"وين نطلب اليوم؟", homeSub:"توصيل سريع من أفضل مطاعم جوبا",
     searchPlaceholder:"دور على مطعم أو وجبة", cartTitle:"سلتي", trackTitle:"تتبع الطلب", driverAssigned:"السائق: أكوان دينق — دراجة نارية 🏍️",
     deliveryCodeLabel:"رمز التسليم — أعطه للسائق عند الاستلام", driverNotAssigned:"لسه ما تم تعيين سائق — بنبلغك فور القبول",
     pickupCodeLabel:"رمز تأكيد السائق", enterDeliveryCode:"اطلب رمز التسليم من الزبون", confirmDelivery:"تأكيد التسليم",
@@ -871,7 +898,7 @@ const I18N = {
   },
   en:{
     appName:"JubaDash", tagline:"Your favorite Juba food, delivered", phoneLabel:"Phone number", continueBtn:"Continue", emailOrPhoneLabel:"Email or phone number",
-    orText:"or", guestLink:"Continue as guest", homeGreeting:"What are we ordering today?", homeSub:"Fast delivery from Juba's best spots",
+    orText:"or", guestLink:"Continue as guest", restoringSession:"Loading your account…", homeGreeting:"What are we ordering today?", homeSub:"Fast delivery from Juba's best spots",
     searchPlaceholder:"Search restaurant or dish", cartTitle:"My Cart", trackTitle:"Track Order", driverAssigned:"Driver: Akuot Deng — Motorcycle 🏍️",
     deliveryCodeLabel:"Delivery code — give it to the driver on receipt", driverNotAssigned:"No driver assigned yet — we'll let you know once one accepts",
     pickupCodeLabel:"Driver confirmation code", enterDeliveryCode:"Ask the customer for their delivery code", confirmDelivery:"Confirm delivery",
@@ -1208,6 +1235,7 @@ function continueAsGuest(){
   if(auth && !auth.currentUser){
     auth.signInAnonymously().catch(e=>console.error('anonymous sign-in failed', e));
   }
+  saveSessionHint('guest');
   showToast(t('toastLoggedIn'));
   go('home');
 }
@@ -1224,6 +1252,7 @@ async function customerSignup(){
     await db.collection('customers').doc(cred.user.uid).set(profile);
     document.getElementById('custAuthError').textContent = '';
     state.currentCustomer = {uid: cred.user.uid, profile};
+    saveSessionHint('customer');
     const sentVerification = await maybeSendEmailVerification(cred, rawId);
     let msg = (state.lang==='ar' ? 'مرحبًا بك في جوبا داش، ' : 'Welcome to JubaDash, ') + name + '! 👋';
     if(rawId.includes('@')) msg += sentVerification ? (state.lang==='ar'?' تحقق من بريدك لتأكيده.':' Check your email to confirm it.') : (state.lang==='ar'?' (تعذّر إرسال رسالة التأكيد، لكن حسابك جاهز)':' (confirmation email failed to send, but your account is ready)');
@@ -1241,6 +1270,7 @@ async function customerLogin(){
     const cred = await auth.signInWithEmailAndPassword(email, pass);
     const custDoc = await db.collection('customers').doc(cred.user.uid).get();
     state.currentCustomer = {uid: cred.user.uid, profile: custDoc.exists ? custDoc.data() : {name:'', contact:rawId}};
+    saveSessionHint('customer');
     document.getElementById('custAuthError').textContent = '';
     showToast(state.lang==='ar' ? 'مرحبًا بعودتك إلى جوبا داش! 👋' : 'Welcome back to JubaDash! 👋');
     go('home');
@@ -1249,6 +1279,7 @@ async function customerLogin(){
 function customerLogout(){
   if(auth) auth.signOut();
   state.currentCustomer = null;
+  clearSessionHint();
   go('home');
 }
 
@@ -1638,6 +1669,7 @@ async function merchantSignup(){
       name, area, orderWhatsapp: orderWhatsapp ? normalizePhoneDigits(orderWhatsapp) : null,
       phone, momoProvider, momoNumber, idDocument: idDocBase64 || null, verificationStatus: 'pending',
     }};
+    saveSessionHint('merchant');
     const sentVerification = await maybeSendEmailVerification(cred, email);
     showToast((state.lang==='ar' ? 'تم إنشاء حساب مطعمك بنجاح' : 'Restaurant account created successfully') + (sentVerification ? (state.lang==='ar'?' — تحقق من بريدك':' — check your email'):''));
     go('merchantDash');
@@ -1660,6 +1692,7 @@ async function merchantLogin(){
       if(privDoc.exists) profile = {...profile, ...privDoc.data()};
     }catch(e){ console.error('restaurantPrivate fetch failed', e); }
     state.currentUser = {uid: cred.user.uid, role:'merchant', profile};
+    saveSessionHint('merchant');
     document.getElementById('authError').textContent = '';
     await loadMyMenu();
     go('merchantDash');
@@ -1688,6 +1721,7 @@ async function driverSignup(){
     state.currentUser = {uid: cred.user.uid, role:'driver', profile: {
       name, phone, vehicle, momoProvider, momoNumber, idDocument: idDocBase64 || null, verificationStatus: 'pending',
     }};
+    saveSessionHint('driver');
     const sentVerification = await maybeSendEmailVerification(cred, email);
     showToast((state.lang==='ar' ? 'تم إنشاء حساب السائق بنجاح' : 'Driver account created successfully') + (sentVerification ? (state.lang==='ar'?' — تحقق من بريدك':' — check your email'):''));
     go('driverDash');
@@ -1705,6 +1739,7 @@ async function driverLogin(){
       return;
     }
     state.currentUser = {uid: cred.user.uid, role:'driver', profile: driverDoc.data()};
+    saveSessionHint('driver');
     document.getElementById('driverAuthError').textContent = '';
     go('driverDash');
   }catch(e){ document.getElementById('driverAuthError').textContent = authErrorMessage(e); }
@@ -1714,13 +1749,23 @@ function logoutRole(){
   if(auth) auth.signOut();
   if(_merchantOrdersUnsub){ _merchantOrdersUnsub(); _merchantOrdersUnsub = null; }
   if(_driverAvailableUnsub){ _driverAvailableUnsub(); _driverAvailableUnsub = null; }
+  state.currentUser = null;
+  clearSessionHint();
   go('home');
 }
 
 function initAuthListener(){
   if(!auth || !db) return;
+  try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ console.error('setPersistence failed', e); }
   auth.onAuthStateChanged(async (user)=>{
-    if(!user){ state.currentUser = null; state.currentCustomer = null; return; }
+    const onPreAuthScreen = ()=> document.getElementById('screen-login').classList.contains('active') ||
+                                  document.getElementById('screen-loading').classList.contains('active');
+    if(!user){
+      state.currentUser = null; state.currentCustomer = null;
+      clearSessionHint();
+      if(document.getElementById('screen-loading').classList.contains('active')) go('login');
+      return;
+    }
     // check which role this uid belongs to
     try{
       const restDoc = await db.collection('restaurants').doc(user.uid).get();
@@ -1744,9 +1789,12 @@ function initAuthListener(){
       const custDoc = await db.collection('customers').doc(user.uid).get();
       if(custDoc.exists){
         state.currentCustomer = {uid:user.uid, profile:custDoc.data()};
-        if(document.getElementById('screen-login').classList.contains('active')) go('home');
+        if(onPreAuthScreen()) go('home');
         return;
       }
+      // Authenticated (e.g. anonymous guest) but no profile doc matches any role —
+      // still leave the loading screen so a returning guest never gets stuck.
+      if(document.getElementById('screen-loading').classList.contains('active')) go('home');
     }catch(e){ console.error('Auth role lookup failed', e); }
   });
 }
