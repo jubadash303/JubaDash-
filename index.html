@@ -260,6 +260,14 @@
   .info-contact a{color:var(--orange-600);font-weight:800;text-decoration:none;font-size:14px;}
   .info-contact .ic-label{font-size:11.5px;color:var(--muted);display:block;margin-bottom:1px;}
 
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-inline-end:44px;}
+  .pw-toggle{
+    position:absolute;top:50%;inset-inline-end:12px;transform:translateY(-50%);background:none;border:none;
+    cursor:pointer;font-size:18px;color:var(--muted);padding:4px;line-height:1;
+  }
+  .forgot-pw{display:block;text-align:end;font-size:12.5px;color:var(--orange-600);font-weight:700;margin-top:6px;cursor:pointer;}
+
   ::-webkit-scrollbar{display:none;}
 </style>
 </head>
@@ -286,7 +294,11 @@
           <label data-i18n="emailOrPhoneLabel">البريد الإلكتروني أو رقم الهاتف</label>
           <input type="text" id="custLoginId" placeholder="092xxxxxxx / you@email.com">
         </div>
-        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="custLoginPass"></div>
+        <div class="field">
+          <label data-i18n="passwordLabel">كلمة المرور</label>
+          <div class="pw-wrap"><input type="password" id="custLoginPass"><button type="button" class="pw-toggle" onclick="togglePw('custLoginPass',this)">👁️</button></div>
+          <a class="forgot-pw" onclick="customerForgotPassword()" data-i18n="forgotPassword">هل نسيت كلمة المرور؟</a>
+        </div>
         <button class="btn" onclick="customerLogin()" data-i18n="continueBtn">متابعة</button>
       </div>
       <div id="custSignupForm" style="display:none;">
@@ -295,7 +307,7 @@
           <label data-i18n="emailOrPhoneLabel">البريد الإلكتروني أو رقم الهاتف</label>
           <input type="text" id="custSignupId" placeholder="092xxxxxxx / you@email.com">
         </div>
-        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="custSignupPass"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><div class="pw-wrap"><input type="password" id="custSignupPass"><button type="button" class="pw-toggle" onclick="togglePw('custSignupPass',this)">👁️</button></div></div>
         <button class="btn" onclick="customerSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
       </div>
       <div class="sub" id="custAuthError" style="color:#C0392B;margin-top:8px;"></div>
@@ -461,7 +473,11 @@
       </div>
       <div id="merchantLoginForm">
         <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="mLoginEmail"></div>
-        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="mLoginPass"></div>
+        <div class="field">
+          <label data-i18n="passwordLabel">كلمة المرور</label>
+          <div class="pw-wrap"><input type="password" id="mLoginPass"><button type="button" class="pw-toggle" onclick="togglePw('mLoginPass',this)">👁️</button></div>
+          <a class="forgot-pw" onclick="merchantForgotPassword()" data-i18n="forgotPassword">هل نسيت كلمة المرور؟</a>
+        </div>
         <button class="btn" onclick="merchantLogin()" data-i18n="loginBtn">تسجيل الدخول</button>
       </div>
       <div id="merchantSignupForm" style="display:none;">
@@ -487,7 +503,7 @@
           <div class="sub" style="margin:4px 0 0;" data-i18n="idDocNote">تُستخدم للتحقق من صاحب المطعم فقط، ولا تظهر للزبائن</div>
         </div>
         <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="mSignupEmail"></div>
-        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="mSignupPass"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><div class="pw-wrap"><input type="password" id="mSignupPass"><button type="button" class="pw-toggle" onclick="togglePw('mSignupPass',this)">👁️</button></div></div>
         <button class="btn" onclick="merchantSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
       </div>
       <div class="sub" id="authError" style="color:#C0392B;margin-top:10px;"></div>
@@ -508,7 +524,11 @@
       </div>
       <div id="driverLoginForm">
         <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="dLoginEmail"></div>
-        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="dLoginPass"></div>
+        <div class="field">
+          <label data-i18n="passwordLabel">كلمة المرور</label>
+          <div class="pw-wrap"><input type="password" id="dLoginPass"><button type="button" class="pw-toggle" onclick="togglePw('dLoginPass',this)">👁️</button></div>
+          <a class="forgot-pw" onclick="driverForgotPassword()" data-i18n="forgotPassword">هل نسيت كلمة المرور؟</a>
+        </div>
         <button class="btn" onclick="driverLogin()" data-i18n="loginBtn">تسجيل الدخول</button>
       </div>
       <div id="driverSignupForm" style="display:none;">
@@ -537,7 +557,7 @@
           <div class="sub" style="margin:4px 0 0;" data-i18n="idDocNote">تُستخدم للتحقق من هوية السائق فقط، ولا تظهر للزبائن</div>
         </div>
         <div class="field"><label data-i18n="emailLabel">البريد الإلكتروني</label><input type="email" id="dSignupEmail"></div>
-        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><input type="password" id="dSignupPass"></div>
+        <div class="field"><label data-i18n="passwordLabel">كلمة المرور</label><div class="pw-wrap"><input type="password" id="dSignupPass"><button type="button" class="pw-toggle" onclick="togglePw('dSignupPass',this)">👁️</button></div></div>
         <button class="btn" onclick="driverSignup()" data-i18n="createAccountBtn">إنشاء الحساب</button>
       </div>
       <div class="sub" id="driverAuthError" style="color:#C0392B;margin-top:10px;"></div>
@@ -742,7 +762,7 @@ const I18N = {
     haveDriverAccount:"عندي حساب سائق بالفعل - تسجيل الدخول", goToMerchantDash:"إنشاء حساب / تسجيل الدخول للوحة تحكم مطعمي",
     merchantDashLink:"لوحة تحكم مطعمي", driverDashLink:"لوحة تحكم السائق",
     merchantAuthTitle:"حساب صاحب المطعم", driverAuthTitle:"حساب السائق", loginTab:"تسجيل الدخول", signupTab:"حساب جديد",
-    emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور", loginBtn:"تسجيل الدخول", createAccountBtn:"إنشاء الحساب",
+    emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور", loginBtn:"تسجيل الدخول", createAccountBtn:"إنشاء الحساب", forgotPassword:"هل نسيت كلمة المرور؟",
     momoProvider:"مزوّد الدفع (Mobile Money)", momoNumber:"رقم حساب الدفع",
     menuTab:"القائمة", incomingOrders:"الطلبات الواردة", driverDashTitle:"لوحة تحكم السائق",
     availableOrders:"طلبات متاحة", myDeliveries:"توصيلاتي",
@@ -843,7 +863,7 @@ const I18N = {
     haveDriverAccount:"I already have a driver account - Log in", goToMerchantDash:"Create account / log in to my restaurant dashboard",
     merchantDashLink:"My Restaurant Dashboard", driverDashLink:"Driver Dashboard",
     merchantAuthTitle:"Restaurant Owner Account", driverAuthTitle:"Driver Account", loginTab:"Log in", signupTab:"New account",
-    emailLabel:"Email", passwordLabel:"Password", loginBtn:"Log in", createAccountBtn:"Create account",
+    emailLabel:"Email", passwordLabel:"Password", loginBtn:"Log in", createAccountBtn:"Create account", forgotPassword:"Forgot your password?",
     momoProvider:"Payment provider (Mobile Money)", momoNumber:"Payout account number",
     menuTab:"Menu", incomingOrders:"Incoming orders", driverDashTitle:"Driver Dashboard",
     availableOrders:"Available orders", myDeliveries:"My deliveries",
@@ -1475,6 +1495,50 @@ function readAndCompressImage(inputId, maxDim, quality){
     reader.onerror = function(){ resolve(null); };
     reader.readAsDataURL(file);
   });
+}
+
+function togglePw(inputId, btn){
+  const input = document.getElementById(inputId);
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁️' : '🙈';
+}
+
+async function customerForgotPassword(){
+  if(!auth){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const rawId = document.getElementById('custLoginId').value.trim();
+  if(!rawId){ document.getElementById('custAuthError').textContent = state.lang==='ar'?'اكتب بريدك أولًا لإعادة تعيين كلمة المرور':'Enter your email first to reset your password'; return; }
+  if(!rawId.includes('@')){
+    document.getElementById('custAuthError').textContent = state.lang==='ar'
+      ? 'إعادة التعيين متاحة فقط للحسابات المسجّلة ببريد إلكتروني حاليًا. تواصل معنا عبر واتساب للمساعدة.'
+      : 'Password reset is currently only available for accounts registered with a real email. Contact us on WhatsApp for help.';
+    return;
+  }
+  try{
+    await auth.sendPasswordResetEmail(rawId.toLowerCase());
+    document.getElementById('custAuthError').textContent = '';
+    showToast(state.lang==='ar' ? 'تم إرسال رابط إعادة التعيين إلى بريدك' : 'Password reset link sent to your email');
+  }catch(e){ document.getElementById('custAuthError').textContent = authErrorMessage(e); }
+}
+async function merchantForgotPassword(){
+  if(!auth){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const email = document.getElementById('mLoginEmail').value.trim();
+  if(!email){ document.getElementById('authError').textContent = state.lang==='ar'?'اكتب بريدك أولًا لإعادة تعيين كلمة المرور':'Enter your email first to reset your password'; return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    document.getElementById('authError').textContent = '';
+    showToast(state.lang==='ar' ? 'تم إرسال رابط إعادة التعيين إلى بريدك' : 'Password reset link sent to your email');
+  }catch(e){ document.getElementById('authError').textContent = authErrorMessage(e); }
+}
+async function driverForgotPassword(){
+  if(!auth){ showToast(state.lang==='ar'?'الخدمة غير متاحة الآن':'Service unavailable right now'); return; }
+  const email = document.getElementById('dLoginEmail').value.trim();
+  if(!email){ document.getElementById('driverAuthError').textContent = state.lang==='ar'?'اكتب بريدك أولًا لإعادة تعيين كلمة المرور':'Enter your email first to reset your password'; return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    document.getElementById('driverAuthError').textContent = '';
+    showToast(state.lang==='ar' ? 'تم إرسال رابط إعادة التعيين إلى بريدك' : 'Password reset link sent to your email');
+  }catch(e){ document.getElementById('driverAuthError').textContent = authErrorMessage(e); }
 }
 
 function authErrorMessage(e){
