@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -722,8 +722,8 @@
   <button class="drawer-item" onclick="go('privacy')">🔒 <span data-i18n="privacyTitle">سياسة الخصوصية</span></button>
   <button class="drawer-item" onclick="toggleDarkMode()">🌙 <span data-i18n="darkModeToggle" id="darkModeLabel">الوضع الليلي</span></button>
   <div class="lang-toggle">
-    <button id="btnAr" onclick="setLang('ar')">العربية</button>
     <button id="btnEn" onclick="setLang('en')">English</button>
+    <button id="btnAr" onclick="setLang('ar')">العربية</button>
   </div>
 </div>
 
@@ -1097,7 +1097,7 @@ async function loadRestaurantsFromFirestore(){
   }catch(e){ console.error('Failed to load live restaurants', e); }
 }
 let state = {
-  lang:'ar',
+  lang:'en',
   cart:[], // {rid, itemIndex, qty}
   currentRestId:null,
   orders:[],
@@ -2041,6 +2041,7 @@ updateCartBadge();
 loadRestaurantsFromFirestore();
 initDarkMode();
 initAuthListener();
+setLang('en');
 </script>
 </body>
 </html>
