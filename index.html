@@ -1280,6 +1280,7 @@ async function customerLogin(){
     const custDoc = await db.collection('customers').doc(cred.user.uid).get();
     state.currentCustomer = {uid: cred.user.uid, profile: custDoc.exists ? custDoc.data() : {name:'', contact:rawId}};
     saveSessionHint('customer');
+    localStorage.setItem('jubadash_logged_in', 'true');
     document.getElementById('custAuthError').textContent = '';
     showToast(state.lang==='ar' ? 'مرحبًا بعودتك إلى جوبا داش! 👋' : 'Welcome back to JubaDash! 👋');
     go('home');
@@ -1289,6 +1290,7 @@ function customerLogout(){
   if(auth) auth.signOut();
   state.currentCustomer = null;
   clearSessionHint();
+  localStorage.removeItem('jubadash_logged_in');
   go('home');
 }
 
@@ -2107,6 +2109,9 @@ if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('/sw.js').catch(e=>console.error('SW registration failed', e));
   });
+}
+if (localStorage.getItem('jubadash_logged_in') === 'true') {
+    setTimeout(() => { go('home'); }, 500);
 }
 </script>
 </body>
