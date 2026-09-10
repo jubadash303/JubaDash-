@@ -755,6 +755,15 @@ function readSessionHint(){ try{ return localStorage.getItem(SESSION_HINT_KEY); 
     const loginEl = document.getElementById('screen-login');
     const loadingEl = document.getElementById('screen-loading');
     if(loginEl && loadingEl){ loginEl.classList.remove('active'); loadingEl.classList.add('active'); }
+    // Safety net: if Firebase never responds (blocked network, offline, restricted
+    // app container, etc.) never leave the user stuck on a blank loading screen —
+    // fall back to the normal login screen after a few seconds.
+    setTimeout(function(){
+      if(loadingEl.classList.contains('active')){
+        loadingEl.classList.remove('active');
+        loginEl.classList.add('active');
+      }
+    }, 4000);
   }
 })();
 
