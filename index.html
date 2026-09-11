@@ -2111,7 +2111,13 @@ if('serviceWorker' in navigator){
   });
 }
 if (localStorage.getItem('jubadash_logged_in') === 'true') {
-    setTimeout(() => { go('home'); }, 500);
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            if (typeof go === 'function') {
+                go('home');
+            }
+        }, 1200);
+    });
 }
 </script>
 </body>
