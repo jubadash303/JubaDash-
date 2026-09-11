@@ -2104,6 +2104,7 @@ loadRestaurantsFromFirestore();
 initDarkMode();
 initAuthListener();
 setLang('en');
+checkSavedLoginSession();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
@@ -2119,6 +2120,31 @@ if (localStorage.getItem('jubadash_logged_in') === 'true') {
         }, 1200);
     });
 }
+async function checkSavedLoginSession() {
+    if (!auth) return;
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            try {
+                const custDoc = await db.collection('customers').doc(user.uid).get();
+                if (custDoc.exists) {
+                    state.currentCustomer = { uid: user.uid, ...custDoc.data() };
+                } else {
+                    state.currentCustomer = { uid: user.uid };
+                }
+                console.log("تم استعادة الجلسة بنجاح");
+            } catch (e) {
+                console.error("خطأ في استعادة البيانات:", e);
+            }
+        } else {
+            state.currentCustomer = null;
+        }
+        
+        if (typeof updateAuthUI === 'function') {
+            updateAuthUI();
+        }
+    });
+}
+
 </script>
 </body>
 </html>
