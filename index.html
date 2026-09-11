@@ -1766,48 +1766,88 @@ function logoutRole(){
 }
 
 function initAuthListener(){
-  if(!auth || !db) return;
+  if(!auth || !db){ console.warn('initAuthListener: auth/db not ready, skipping'); return; }
   try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){ console.error('setPersistence failed', e); }
+
+  // Single source of truth for auth state. Every branch is wrapped so that
+  // ANY failure (missing element, missing function, network/Firestore error)
+  // is caught and logged instead of throwing and freezing the whole app.
   auth.onAuthStateChanged(async (user)=>{
-    const onPreAuthScreen = ()=> document.getElementById('screen-login').classList.contains('active') ||
-                                  document.getElementById('screen-loading').classList.contains('active');
-    if(!user){
-      state.currentUser = null; state.currentCustomer = null;
-      clearSessionHint();
-      if(document.getElementById('screen-loading').classList.contains('active')) go('login');
-      return;
-    }
-    // check which role this uid belongs to
     try{
-      const restDoc = await db.collection('restaurants').doc(user.uid).get();
-      if(restDoc.exists){
+      const loadingEl = document.getElementById('screen-loading');
+      const loginEl = document.getElementById('screen-login');
+      const onPreAuthScreen = ()=> (loginEl && loginEl.classList.contains('active')) ||
+                                    (loadingEl && loadingEl.classList.contains('active'));
+
+      if(!user){
+        state.currentUser = null; state.currentCustomer = null;
+        clearSessionHint();
+        safeUpdateAuthUI();
+        if(loadingEl && loadingEl.classList.contains('active')) go('login');
+        return;
+      }
+
+      // Check which role this uid belongs to. Each Firestore call is its own
+      // try/catch so one failed lookup can't take down the others.
+      let restDoc = null, driverDoc = null, custDoc = null;
+      try{ restDoc = await db.collection('restaurants').doc(user.uid).get(); }
+      catch(e){ console.error('restaurants lookup failed', e); }
+
+      if(restDoc && restDoc.exists){
         let profile = restDoc.data();
         try{
           const privDoc = await db.collection('restaurantPrivate').doc(user.uid).get();
           if(privDoc.exists) profile = {...profile, ...privDoc.data()};
         }catch(e){ console.error('restaurantPrivate fetch failed', e); }
         state.currentUser = {uid:user.uid, role:'merchant', profile};
-        loadMyMenu();
-        if(document.getElementById('screen-merchantAuth').classList.contains('active')) go('merchantDash');
+        safeUpdateAuthUI();
+        try{ if(typeof loadMyMenu === 'function') loadMyMenu(); }catch(e){ console.error('loadMyMenu failed', e); }
+        if(document.getElementById('screen-merchantAuth')?.classList.contains('active')) go('merchantDash');
         return;
       }
-      const driverDoc = await db.collection('drivers').doc(user.uid).get();
-      if(driverDoc.exists){
+
+      try{ driverDoc = await db.collection('drivers').doc(user.uid).get(); }
+      catch(e){ console.error('drivers lookup failed', e); }
+
+      if(driverDoc && driverDoc.exists){
         state.currentUser = {uid:user.uid, role:'driver', profile:driverDoc.data()};
-        if(document.getElementById('screen-driverAuth').classList.contains('active')) go('driverDash');
+        safeUpdateAuthUI();
+        if(document.getElementById('screen-driverAuth')?.classList.contains('active')) go('driverDash');
         return;
       }
-      const custDoc = await db.collection('customers').doc(user.uid).get();
-      if(custDoc.exists){
+
+      try{ custDoc = await db.collection('customers').doc(user.uid).get(); }
+      catch(e){ console.error('customers lookup failed', e); }
+
+      if(custDoc && custDoc.exists){
         state.currentCustomer = {uid:user.uid, profile:custDoc.data()};
+        safeUpdateAuthUI();
         if(onPreAuthScreen()) go('home');
         return;
       }
+
       // Authenticated (e.g. anonymous guest) but no profile doc matches any role —
       // still leave the loading screen so a returning guest never gets stuck.
-      if(document.getElementById('screen-loading').classList.contains('active')) go('home');
-    }catch(e){ console.error('Auth role lookup failed', e); }
+      safeUpdateAuthUI();
+      if(loadingEl && loadingEl.classList.contains('active')) go('home');
+    }catch(e){
+      // Absolute last-resort safety net: never let this callback throw.
+      console.error('onAuthStateChanged handler failed', e);
+      try{
+        const loadingEl = document.getElementById('screen-loading');
+        if(loadingEl && loadingEl.classList.contains('active')) go('login');
+      }catch(e2){ console.error('fallback navigation also failed', e2); }
+    }
   });
+}
+
+// Calls updateAuthUI()/renderSidebar() only if they exist, and never lets a
+// bug in either one break the auth flow that called it.
+function safeUpdateAuthUI(){
+  try{ if(typeof updateAuthUI === 'function') updateAuthUI(); }
+  catch(e){ console.error('updateAuthUI failed', e); }
+  try{ if(typeof renderSidebar === 'function') renderSidebar(); }
+  catch(e){ console.error('renderSidebar failed', e); }
 }
 
 /* =========================================================
@@ -2104,45 +2144,11 @@ loadRestaurantsFromFirestore();
 initDarkMode();
 initAuthListener();
 setLang('en');
-checkSavedLoginSession();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('/sw.js').catch(e=>console.error('SW registration failed', e));
   });
-}
-if (localStorage.getItem('jubadash_logged_in') === 'true') {
-    window.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            if (typeof go === 'function') {
-                go('home');
-            }
-        }, 1200);
-    });
-}
-async function checkSavedLoginSession() {
-    if (!auth) return;
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            try {
-                const custDoc = await db.collection('customers').doc(user.uid).get();
-                if (custDoc.exists) {
-                    state.currentCustomer = { uid: user.uid, ...custDoc.data() };
-                } else {
-                    state.currentCustomer = { uid: user.uid };
-                }
-                console.log("تم استعادة الجلسة بنجاح");
-            } catch (e) {
-                console.error("خطأ في استعادة البيانات:", e);
-            }
-        } else {
-            state.currentCustomer = null;
-        }
-        
-        if (typeof updateAuthUI === 'function') {
-            updateAuthUI();
-        }
-    });
 }
 </script>
 </body>
